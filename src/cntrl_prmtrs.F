@@ -69,7 +69,12 @@ SUBROUTINE CNTRL_PRMTRS
        & 'or turn it off in the run file')
 # endif
 
-
+# if !defined(ICESHELF)
+    If(ICESHELF_MODEL) CALL FATAL_ERROR &
+         & ('You must compile with ICESHELF to use it!',&                                                  
+         & 'Recompile after selecting it in the make file,',&                                              
+         & 'or turn it off in the run file')
+# endif  
 
 !  write(ipt,*)  "PRG_NAME='"//trim(prg_name)//"'"
 
@@ -197,8 +202,19 @@ SUBROUTINE CNTRL_PRMTRS
         ZETA1=0.0_SP
         ZETA2=0.0_SP
      END IF
-#    endif     
+#    endif    
 
+# if defined (ICE)
+    IF(ICE_MODEL)  ITHRD  = ICE_THRESHOLD
+    IF(ICE_MODEL)  DTICE = ICE_TIMESTEP 
+# endif
+#  if defined (ICESHELF)
+      IF(ICESHELF_MODEL)  THEN
+         DRDZ    =   ICESHELF_DRDZ
+         GAMA_T  =   ICESHELF_GAMAT
+         ISFCBC  =   ICESHELF_DRAG_COEFFICIENT
+      END IF
+#  endif
      IF(.not. NESTING_ON)THEN    ! Siqi Li    
      IF( .not. OBC_ON .or. .not. OBC_ELEVATION_FORCING_ON) THEN
         IF (OBC_LONGSHORE_FLOW_ON) THEN

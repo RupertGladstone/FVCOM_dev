@@ -48,14 +48,14 @@
 #========== TOPDIR ========================================================
 # TOPDIR is the directory in which this make file and the fvcom source reside
 
-           TOPDIR        = 
+           TOPDIR        = /cluster/home/mib/Code/FVCOM_petsc/FVCOM_chen/src
 #EXAMPLE
 # TOPDIR = /home/user/cchen/FVCOM_source
 # TOPDIR must be set!
 #========== INSTALLDIR =====================================================
 # INSTALLDIR is the directory where you wish to install external libraries
 # The default is in the $(TOPDIR)/libs/install, but you can choose...
-            INSTALLDIR    = $(TOPDIR)/libs/install
+            INSTALLDIR    = /cluster/home/mib/Code/FVCOM_petsc/FVCOM_chen/src/libs/install
 #===========================================================================
 # PREPROCESSOR OPTIONS FOR CPP
 #            DEF_FLAGS     = -P -C -traditional 
@@ -80,8 +80,8 @@ endif
 ###########################################################################
 
 # LOCAL INSTAL
-#             LIBDIR       =  -L$(INSTALLDIR)/lib
-#             INCDIR       =  -I$(INSTALLDIR)/include
+             LIBDIR       =  -L$(INSTALLDIR)/lib
+             INCDIR       =  -I$(INSTALLDIR)/include -I${PETSC_DIR}/include -I${PETSC_DIR}/include/petsc/finclude
 
 
 #--------------------------------------------------------------------------
@@ -98,15 +98,10 @@ endif
 #                           SET PATH TO LIBRARIES WITH IOLIBS      
 #                           SET PATH TO INCLUDE FILES (netcdf.mod) WITH IOINCS
 #--------------------------------------------------------------------------
-#            FLAG_USE_NETCDF4     = -DUSE_NETCDF4
+            FLAG_USE_NETCDF4     = -DUSE_NETCDF4
 #            FLAG_USE_COMPRESSION = -DUSE_COMPRESSION
-             IOLIBS       =  -lnetcdff -lnetcdf #-lhdf5_hl -lhdf5 -lz -lcurl -lm
-#             IOLIBS       =  -lnetcdf #-L/hosts/mao/usr/medm/install/netcdf/3.6.3/em64t/lib -lnetcdf
-             IOINCS       =  #-I/hosts/mao/usr/medm/install/netcdf/3.6.3/em64t/include
-#             IOLIBS       =  -L/usr/local/install/netcdf/gcc_ifort/3.6.2/lib  -lnetcdf
-#             IOINCS       =  -I/usr/local/install/netcdf/gcc_ifort/3.6.2/include
-##             IOLIBS       = -L/usr/local/install/netcdf-4.4.1.1-with-fortran/lib -lnetcdff -lnetcdf
-##             IOINCS       = -I/usr/local/install/netcdf-4.4.1.1-with-fortran/include
+            IOLIBS  = -L/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/lib -lnetcdff -lnetcdf
+            IOINCS  = -I/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/include
 #--------------------------------------------------------------------------
 #     PETSC 
 #       PETSC IS REQUIRED IF ANY OF THE FOLLOWING FLAGS IS TURNED ON:
@@ -122,12 +117,12 @@ endif
 #            include ${PETSC_DIR}/bmake/common/variables
 #
 #       FOR VERSION 2.3.3
-            FLAG_41 = -DPETSC_B
-            include ${PETSC_DIR}/bmake/common/variables
+#            FLAG_41 = -DPETSC_B
+#            include ${PETSC_DIR}/bmake/common/variables
 #
 #       FOR VERSION 3.18.5
-#            FLAG_41 = -DPETSC_C
-#            include ${PETSC_DIR}/lib/petsc/conf/variables
+            FLAG_41 = -DPETSC_C
+            include ${PETSC_DIR}/lib/petsc/conf/variables
 
 #==========================================================================
 #  BEGIN USER DEFINITION SECTION
@@ -148,7 +143,7 @@ endif
 #            FLAG_1 =  -DDOUBLE_PRECISION 
 
 #        SINGLE PRECISION OUTPUT FOR VISIT
-#            FLAG_1 =  -DDOUBLE_PRECISION -DSINGLE_OUTPUT
+            FLAG_1 =  -DDOUBLE_PRECISION -DSINGLE_OUTPUT
 
 #--------------------------------------------------------------------------
 #        SPHERICAL          SELECT SPHERICAL COORDINATES FOR INTEGRATION
@@ -156,7 +151,7 @@ endif
 #                           UNCOMMENT TO SELECT SPHERICAL COORDINATES
 #--------------------------------------------------------------------------
 
-#            FLAG_2 = -DSPHERICAL
+            FLAG_2 = -DSPHERICAL
 
 #--------------------------------------------------------------------------
 #        FLOODYING/DRYING   INCLUDE WET/DRY TREATMENT OF DOMAIN
@@ -214,10 +209,10 @@ endif
 #
 #--------------------------------------------------------------------------
 
-#             FLAG_6 = -DPROJ
+             FLAG_6 = -DPROJ
 
-#             PROJLIBS       = -lfproj4 -lproj -lm
-#             PROJINCS       =
+             PROJLIBS       = -lfproj4 -lproj -lm
+             PROJINCS       =
 
 #--------------------------------------------------------------------------
 #        DATA_ASSIMILATION  INCLUDE NUDGING BASED DATA ASSIMILATION FOR
@@ -256,7 +251,7 @@ endif
 #  Semi-Implicit time stepping method
 #--------------------------------------------------------------------------
 
-#             FLAG_9 = -DSEMI_IMPLICIT
+             FLAG_9 = -DSEMI_IMPLICIT
 
 
 #---------------------------------------------------------------------------
@@ -456,7 +451,7 @@ endif
 #        NON-HYDROSTATIC MODEL:
 #--------------------------------------------------------------------------
 
-#             FLAG_30 =  -DNH
+             FLAG_30 =  -DNH
 
 #--------------------------------------------------------------------------
 #        PARTICLE TRACKING
@@ -510,6 +505,13 @@ endif
 #        DEVELOPMENT FLAGS
 #            FOR BETA WORK ONLY 
 #--------------------------------------------------------------------------
+#         Dynamic/Thermodynamic IceShelf and ice model coupling options
+#--------------------------------------------------------------------------
+# -DISOMIP 
+#            CPP_MISC ?= -DICESHELF -DICEDRAFTMORPHY -DFVCOM_API -DFISOC_DDDT -DFISOC_DSDT -DFISOC_DRAFT
+            CPP_MISC = -DFAKEICEDRAFT -DICESHELF -DICEDRAFTMORPHY -DFVCOM_API -DFISOC_DDDT  -DFISOC_DRAFT
+#            CPP_MISC = -DICENUDGE
+
 
 #             FLAG_101 = -DDEVELOP1
 #             FLAG_102 = -DDEVELOP2
@@ -588,23 +590,35 @@ endif
 #--------------------------------------------------------------------------
 #  Intel/MPI Compiler Definitions (SMAST)      
 #--------------------------------------------------------------------------
-         CPP      = /usr/bin/cpp
-         COMPILER = -DIFORT  
-         CC       = mpicc
-         CXX      = mpicxx
-         CFLAGS   = -O3 
-         FC       = mpif90
+#         CPP      = /usr/bin/cpp
+#         COMPILER = -DIFORT  
+#         CC       = mpicc
+#         CXX      = mpicxx
+#         CFLAGS   = -O3 
+#         FC       = mpif90
 #         DEBFLGS  = -check all -traceback
 # Use 'OPT = -O0 -g'  for fast compile to test the make 
 # Use 'OPT = -xP' for fast run on em64t (Hydra and Guppy)
 # Use 'OPT = -xN' for fast run on ia32 (Salmon and Minke)
 #         OPT      = -O0 -g
 #         OPT      = -axN -xN
-         OPT      = -O3
-
+#         OPT      = -O3
+#
 # Do not set static for use with visit!
 #         VISOPT   = -Wl,--export-dynamic
 #         LDFLAGS  =  $(VISITLIBPATH)
+#--------------------------------------------------------------------------
+#  Betzy Gfortran
+#--------------------------------------------------------------------------
+         CPP      = /usr/bin/cpp
+         COMPILER = -DGFORTRAN
+         CC       = mpicc
+         CXX      = mpicxx
+         CFLAGS   = -O3
+         FC       = mpif90
+         DEBFLGS  = -cpp
+         OPT      = -O3 -g -fallow-argument-mismatch -ffree-line-length-none
+
 #--------------------------------------------------------------------------
 #  gfortran defs 
 #--------------------------------------------------------------------------
@@ -672,7 +686,7 @@ endif
    $(FLAG_43) $(FLAG_44) $(FLAG_45) $(FLAG_80) $(FLAG_81) $(FLAG_LAM) $(FLAG_411) \
    $(FLAG_101) $(FLAG_102) $(FLAG_103) $(FLAG_104) $(FLAG_105) $(FLAG_321)\
    $(FLAG_211) $(FLAG_212) $(FLAG_213) $(FLAG_251) $(FLAG_261) $(FLAG_262)\
-   $(FLAG_USE_NETCDF4) $(FLAG_USE_COMPRESSION)
+   $(FLAG_USE_NETCDF4) $(FLAG_USE_COMPRESSION) $(CPP_MISC)
 #--------------------------------------------------------------------------
 #  Libraries           
 #--------------------------------------------------------------------------

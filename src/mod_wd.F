@@ -43,6 +43,7 @@ MODULE MOD_WD
    INTEGER , ALLOCATABLE :: ISWETCT(:)          !!CELL POROSITY AT CELLS FOR TIME N-1 INTERNAL
    INTEGER , ALLOCATABLE :: ISWETCE(:)          !!CELL POROSITY AT CELLS FOR TIME N-1 EXTERNAL
 
+
 !qxu{for inundation maps
    INTEGER , ALLOCATABLE :: INUNDATION_MAPS(:)         !!is flooding cell for Time N
 !qxu}
@@ -125,16 +126,23 @@ MODULE MOD_WD
 
 
 #   else
-     EL1 = ELF1
+
+# if defined (ICESHELF)
+      D1  = H1 + EL1 -ZISF1
+      D  = EL + H -ZISF
+      WHERE (D<=MIN_DEPTH)  D  =  MIN_DEPTH
+      WHERE (D1<=MIN_DEPTH) D1 =  MIN_DEPTH
+# else
      D1  = H1 + EL1
+     D  = EL + H
+# endif
+     EL1 = ELF1
      EL = ELF
      ET = EL
-     D  = EL + H
      DT = D
      DTFA = D
      ET1 = EL1
      DT1 = D1
-
 #   endif
 
    END IF 
@@ -179,6 +187,7 @@ MODULE MOD_WD
 
    memcnt = memcnt + 3*NT + 2*MT + NT
 
+
 !!   ALLOCATE(US(0:NT,KB))         ;US    = ZERO   !!X-VELOCITY FOR MASS CONSERVATION
 !!   ALLOCATE(VS(0:NT,KB))         ;VS    = ZERO   !!Y-VELOCITY FOR MASS CONSERVATION
 
@@ -207,6 +216,9 @@ MODULE MOD_WD
    USE MOD_PAR
    IMPLICIT NONE
    REAL(SP) :: DTMP
+#if defined (ICESHELF)
+   REAL(SP) :: TMP(0:MT),TMP_WCT(0:MT)
+#endif
    INTEGER  :: ITA_TEMP
    INTEGER  :: I,IL,IA,IB,K1,K2,K3,K4,K5,K6
 
@@ -221,7 +233,11 @@ MODULE MOD_WD
 #   if defined (ICE_EMBEDDING)
      DTMP = H(I) + ELF(I)  - QTHICE(I)
 #   else
-     DTMP = H(I) + ELF(I)
+#     if defined (ICESHELF)
+         DTMP = H(I)-ZISF(I)
+#     else
+         DTMP = H(I) + ELF(I)
+#     endif
 #   endif
 
      IF((DTMP - MIN_DEPTH) < 1.0E-5_SP) ISWETN(I) = 0
@@ -236,10 +252,15 @@ MODULE MOD_WD
      DTMP =  MAX(ELF(NV(I,1)),ELF(NV(I,2)),ELF(NV(I,3)))  + &
              MIN(  H(NV(I,1)),  H(NV(I,2)),  H(NV(I,3)))  - &
              MAX(QTHICE(NV(I,1)),QTHICE(NV(I,2)),QTHICE(NV(I,3)))      !!yding
+#  else
+#   if defined (ICESHELF)
+        DTMP =  MIN( H(NV(I,1))-ZISF(NV(I,1)),H(NV(I,2))-ZISF(NV(I,2)),&
+              H(NV(I,3))-ZISF(NV(I,3)))
 #   else
      DTMP =  MAX(ELF(NV(I,1)),ELF(NV(I,2)),ELF(NV(I,3)))  + &
              MIN(  H(NV(I,1)),  H(NV(I,2)),  H(NV(I,3)))
 #   endif
+#  endif
 
      IF((DTMP - MIN_DEPTH) < 1.0E-5_SP) ISWETC(I) = 0
    END DO
@@ -263,9 +284,15 @@ MODULE MOD_WD
 
 !
 !--Adjust Water Surface So It Does Not Go Below Minimum Depth------------------!
-!
-   ELF = MAX(ELF,-H + MIN_DEPTH)
 
+   
+# if defined (ICESHELF)
+   TMP_WCT = H-ZISF
+   WHERE(TMP_WCT<=MIN_DEPTH) TMP_WCT = MIN_DEPTH
+   ELF = MAX(ELF,-TMP_WCT+ MIN_DEPTH)
+# else 
+   ELF = MAX(ELF,-H + MIN_DEPTH)
+# endif
 !
 !--Recompute Element Based Depths----------------------------------------------!
 !

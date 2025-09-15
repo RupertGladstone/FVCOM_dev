@@ -50,6 +50,14 @@ SUBROUTINE VDIF_TS(NCON1,F)
   USE MOD_WD
 #  endif
 
+#  if defined (ICESHELF)
+  USE MOD_ISF
+#  endif
+
+#  if defined (ICENUDGE)
+  USE MOD_ICENUDGE
+#  endif
+
 # if defined (THIN_DAM)
   USE MOD_DAM,only : NODE_DAM1_N,NODE_DAM2_N,NODE_DAM3_N&
                       &,I_NODE_DAM1_N,I_NODE_DAM2_N,I_NODE_DAM3_N,KDAM
@@ -239,11 +247,32 @@ SUBROUTINE VDIF_TS(NCON1,F)
 	RAD    = 0.0_SP
      END IF
 
+
+# if defined (ICESHELF)
+     DO I=1,M 
+! Set the radiation and net heat flux to zero beneath the ice shelf
+      IF(ABS(ISISFN(I))==1) THEN
+        SWRADF(I)=0.0_SP
+        WFSURF(I)=0.0_SP
+        RAD(I,:) =0.0_SP  
+      END IF
+     END DO
+   WFSURF(1:M)=WFSURF+NHF_isf(1:M)
+# endif
+
+
   CASE(2)
 
      SWRADF   = 0.0_SP
-     WFSURF   = 0.0_SP
-     COSGAMA1 = 1.0_SP
+     WFSURF   =0.0_SP
+     COSGAMA1 =1.0_SP
+# if defined (ICESHELF)
+! visual salt flux from ice shelf freezing 
+     WFSURF(1:M)   = WFSURF(1:M)-NSF_isf(1:M)
+# endif
+# if defined (ICENUDGE) 
+     WFSURF(1:M)   = WFSURF(1:M)-FVSALT1(1:M) -FVSALT2(1:M)
+# endif 
 !---Considering the salinity conservation, the sea surface salinity flux-----!
 !---can be set as zero, that is----------------------------------------------!
      SASURF   = 0.0_SP

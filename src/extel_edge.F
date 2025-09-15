@@ -49,6 +49,10 @@
    use mod_ice,only : isicen  !,fresh,RHOW
 #  endif
 
+# if defined (ICESHELF)
+   USE MOD_ISF, only: ISISFN
+# endif
+
 #  if defined (THIN_DAM)
    use mod_dam
 #  endif
@@ -134,6 +138,13 @@
 !!$       END DO
 #  endif
 
+# if defined (ICESHELF)
+  WHERE(ABS(ISISFN)==1)
+     QPREC2 = 0.0_SP
+     QEVAP2 = 0.0_SP
+  END WHERE
+# endif
+
 !qxu   XFLUX = XFLUX+(QEVAP2-QPREC2)*ROFVROS*ART1 
 !qxu---the evap is negative for evaporating in ocean
       XFLUX = XFLUX-(QEVAP2+QPREC2)*ROFVROS*ART1 
@@ -173,6 +184,13 @@
      END IF
    END IF
 
+!---------ADJUST FLUX FOR SUBGLACIAL RUNOFF -----------------------------------!
+! added by Qin, 24/04/2024, should not be so complicated. 
+# if defined(FISOC_RUNOFF)
+   DO I=1,M
+       XFLUX(I)=XFLUX(I) - subRunoff(I)
+   END DO
+# endif
 
 !----------PERFORM UPDATE ON ELF-----------------------------------------------!
 

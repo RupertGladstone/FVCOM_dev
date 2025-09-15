@@ -487,6 +487,17 @@ PROGRAM FVCOM
   USE MOD_TVD
 # endif
 
+! Added by Qin at Akvaplan-niva 2019
+# if defined (ICESHELF)
+    USE MOD_ISF
+# endif
+
+! Added by Qin at Akvaplan-niva 2021
+# if defined (ICENUDGE)
+    USE MOD_ICENUDGE
+# endif
+
+  
 # if defined (NH)
   USE NON_HYDRO
 # endif
@@ -682,6 +693,10 @@ PROGRAM FVCOM
 
 # if defined (ICE)
   IF(ICE_MODEL) CALL ICE_INIT_0
+# endif
+
+# if defined (ICESHELF)
+    CALL ISF_INIT_0
 # endif
 
   !  SETUP PETSc FOR SEMI_IMPLICIT AND NON-HYDROSTATIC MODULE

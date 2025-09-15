@@ -52,6 +52,9 @@
       use ALL_VARS, only : mlt_lat, QTHICE           !!yding
 #   endif
 
+#  if defined (ICESHELF)
+      use mod_isf, only : ISISFN
+#  endif
 
 !      use ice_diagnostics, only: print_state
 !      use ice_diagnostics  ! print_state
@@ -601,6 +604,10 @@
 #   endif
  
          rside(i,j) = max(c0i,min(rside(i,j),c1i))
+
+# if defined (ICESHELF)
+     IF(ISISFN(i)==1) rside(i,j) = 0.0_SP
+# endif
 
       enddo                     ! ij
 
@@ -2438,6 +2445,9 @@
             Ts = (Lfresh + qsn(i,j)/rhos) / cp_ice
             if (Ts > c0i) then
                dhs = cp_ice*Ts*hsn(i,j) / Lfresh
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhs = 0.0_SP    
+# endif
                hsn(i,j) = hsn(i,j) - dhs
                qsn(i,j) = -rhos*Lfresh
             endif
@@ -2451,6 +2461,9 @@
                Ti = (Lfresh + qin(i,j,k)/rhoi) / cp_ice
                if (Ti > c0i) then
                   dhi = cp_ice*Ti*hnew(i,j,k) / Lfresh
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif
                   hnew(i,j,k) = hnew(i,j,k) - dhi
                   qin(i,j,k) = -rhoi*Lfresh
                endif
@@ -2478,10 +2491,16 @@
 
          if (hsn(i,j) > puny) then    ! add snow with enthalpy qsn
             dhs = econ / (qsn(i,j) - rhos*Lvap)      ! econ < 0, dhs > 0
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhs = 0.0_SP
+# endif
             hsn(i,j) = hsn(i,j) + dhs
             mvap(i,j) = mvap(i,j) + dhs*rhos
          else                   ! add ice with enthalpy qin(i,j,1)
-            dhi = econ / (qin(i,j,1) - rhoi*Lvap)    ! econ < 0, dhi > 0  
+            dhi = econ / (qin(i,j,1) - rhoi*Lvap)    ! econ < 0, dhi > 0
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif  
             hnew(i,j,1) = hnew(i,j,1) + dhi
             mvap(i,j) = mvap(i,j) + dhi*rhoi
          endif
@@ -2491,6 +2510,9 @@
          !--------------------------------------------------------------
          qsub = qsn(i,j) - rhos*Lvap                 ! qsub < 0
          dhs  = max (-hsn(i,j), esub(i,j)/qsub)      ! esub > 0, dhs < 0
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhs = 0.0_SP
+# endif
          hsn(i,j) = hsn(i,j) + dhs
          esub(i,j) = esub(i,j) - dhs*qsub
          esub(i,j) = max(esub(i,j), c0i)   ! in case of roundoff error
@@ -2507,6 +2529,9 @@
             j = indxj(ij)
             qsub = qin(i,j,k) - rhoi*Lvap            ! qsub < 0
             dhi = max (-hnew(i,j,k), esub(i,j)/qsub) ! esub < 0, dhi < 0
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif
             hnew(i,j,k) = hnew(i,j,k) + dhi   
             esub(i,j) = esub(i,j) - dhi*qsub  
             esub(i,j) = max(esub(i,j), c0i)
@@ -2530,7 +2555,10 @@
 !         w1 = (fsurf(i,j) - fcondtop(i,j)) * dt
          w1 = (fsurf(i,j) - fcondtop(i,j)) * dtice
          etop_mlt(i,j) = max(w1, c0i)                  ! etop_mlt > 0
-         dhs = max(-hsn(i,j), etop_mlt(i,j)/qsn(i,j)) ! qsn < 0, dhs < 0 
+         dhs = max(-hsn(i,j), etop_mlt(i,j)/qsn(i,j)) ! qsn < 0, dhs < 0
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhs = 0.0_SP
+# endif 
          hsn(i,j) = hsn(i,j) + dhs
          etop_mlt(i,j) = etop_mlt(i,j) - dhs*qsn(i,j)
          etop_mlt(i,j) = max(etop_mlt(i,j), c0i) ! in case of roundoff error
@@ -2551,6 +2579,9 @@
             j = indxj(ij)
 
             dhi = max(-hnew(i,j,k), etop_mlt(i,j)/qin(i,j,k)) 
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif
             hnew(i,j,k) = hnew(i,j,k) + dhi           ! qin < 0, dhi < 0
             etop_mlt(i,j) = etop_mlt(i,j) - dhi*qin(i,j,k)
             etop_mlt(i,j) = max(etop_mlt(i,j), c0i)
@@ -2598,7 +2629,10 @@
 # endif
                 
          qbot = min (qbot, qbotmax) ! in case Tbot is close to Tmlt    
-         dhi  = ebot_gro / qbot     ! dhi > 0                          
+         dhi  = ebot_gro / qbot     ! dhi > 0   
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif                       
                                                                        
          hqtot = hnew(i,j,nilyr)*qin(i,j,nilyr) + dhi*qbot             
          hnew(i,j,nilyr) = hnew(i,j,nilyr) + dhi                       
@@ -2624,6 +2658,9 @@
             j = indxj(ij)
 
             dhi = max(-hnew(i,j,k), ebot_mlt(i,j)/qin(i,j,k))
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhi = 0.0_SP
+# endif
             hnew(i,j,k) = hnew(i,j,k) + dhi           ! qin < 0, dhi < 0
             ebot_mlt(i,j) = ebot_mlt(i,j) - dhi*qin(i,j,k)
             ebot_mlt(i,j) = max(ebot_mlt(i,j), c0i)
@@ -2643,6 +2680,9 @@
          j = indxj(ij)
 
          dhs = max(-hsn(i,j), ebot_mlt(i,j)/qsn(i,j))
+# if defined (ICESHELF)
+            IF(ISISFN(I)==1) dhs = 0.0_SP
+# endif
          hsn(i,j) = hsn(i,j) + dhs                    ! qsn < 0, dhs < 0
          ebot_mlt(i,j) = ebot_mlt(i,j) - dhs*qsn(i,j)
          ebot_mlt(i,j) = max(ebot_mlt(i,j), c0i)

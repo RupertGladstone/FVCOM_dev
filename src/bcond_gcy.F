@@ -745,6 +745,11 @@
       END IF
 # endif
 
+# if defined (ICENUDGE)
+     IF (ICENUDGE_ON) THEN
+        CALL UPDATE_ICENUDGE(IntTime,AICE,HICE,ISALT,UICE,VICE)
+     END IF
+# endif
 
 !
 !-- Set Groundwater flux ------------------------------------------------------|

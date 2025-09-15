@@ -138,6 +138,9 @@ SUBROUTINE ADV_S
       OFFS = 1.0_SP
       S1  = S1+OFFS
       SMEAN1 = SMEAN1 + OFFS
+#   if defined (FISOC_RUNOFF)
+      SsubRunoff   = SsubRunoff+OFFS(:,1)
+#   endif  
 # endif
 
   !
@@ -663,7 +666,16 @@ SUBROUTINE ADV_S
         END IF
      END IF
   END IF
-  !
+
+  !------------------------FISOC subglacial runoff plux part----------------------
+  ! Added by Qin 24/04/2024
+# if defined(FISOC_RUNOFF)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - subRunoff(I)/KBM1*SsubRunoff(I)
+         END DO
+   END DO
+# endif  
 
   ! -------------------------------------------------------------------
   !        The horizontal term of advection is neglected here
@@ -752,18 +764,33 @@ SUBROUTINE ADV_S
            IF(K == 1)THEN
               SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
               SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
+# if defined (FISOC_RUNOFF)
+              SMAX = MAX(SMAX,S1(I,K+1),S1m(I,K),S1_FRESHm(I,K),SsubRunoff(I))
+              SMIN = MIN(SMIN,S1(I,K+1),S1m(I,K),S1_FRESHm(I,K),SsubRunoff(I))
+# else
               SMAX = MAX(SMAX,S1(I,K+1),S1(I,K),S1_FRESH(I,K))
               SMIN = MIN(SMIN,S1(I,K+1),S1(I,K),S1_FRESH(I,K))
+# endif
            ELSEIF(K == KBM1) THEN
               SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
               SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
+# if defined (FISOC_RUNOFF)
+              SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+              SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+# else
               SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
               SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
+# endif
            ELSE
               SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
               SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
+# if defined (FISOC_RUNOFF)
+              SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+              SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+# else
               SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
               SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
+# endif
            END IF
 
          ! Total (horizontal + vertical) flux to the cell
@@ -830,9 +857,13 @@ SUBROUTINE ADV_S
      DO I=1,M
         SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),1))
         SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),1))
+# if defined (FISOC_RUNOFF)
+        SMAX = MAX(SMAX,S1(I,2),S1m(I,1),S1_FRESHm(I,1),SsubRunoff(I))
+        SMIN = MIN(SMIN,S1(I,2),S1m(I,1),S1_FRESHm(I,1),SsubRunoff(I))
+# else
         SMAX = MAX(SMAX,S1(I,2),S1(I,1),S1_FRESH(I,1))
         SMIN = MIN(SMIN,S1(I,2),S1(I,1),S1_FRESH(I,1))
-
+# endif
         TEMP=0.5*((WWWS(I,2)+ABS(WWWS(I,2)))*S1_S(I,2))*(DTI/DTFA(I))/DZ(I,1)
         BETAIN(I,1)=(SMAX-S1_S(I,1))/(TEMP+1.E-10)
 
@@ -848,9 +879,13 @@ SUBROUTINE ADV_S
         DO I=1,M
            SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
            SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
+# if defined (FISOC_RUNOFF)
+           SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+           SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+# else
            SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
            SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
-
+# endif
            TEMP=0.5*((WWWS(I,K+1)+ABS(WWWS(I,K+1)))*S1_S(I,K+1)-  &
                 (WWWS(I,K)-ABS(WWWS(I,K)))*S1_S(I,K-1))*(DTI/DTFA(I))/DZ(I,K)
            BETAIN(I,K)=(SMAX-S1_S(I,K))/(TEMP+1.E-10)
@@ -869,9 +904,13 @@ SUBROUTINE ADV_S
      DO I=1,M
         SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
         SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
+# if defined (FISOC_RUNOFF)
+        SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+        SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+# else
         SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
         SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
-
+# endif
         TEMP=0.5*((WWWS(I,K+1)+ABS(WWWS(I,K+1)))*S1_S(I,K+1)-  &
              (WWWS(I,K)-ABS(WWWS(I,K)))*S1_S(I,K-1))*(DTI/DTFA(I))/DZ(I,K)
         BETAIN(I,K)=(SMAX-S1_S(I,K))/(TEMP+1.E-10)
@@ -920,8 +959,11 @@ SUBROUTINE ADV_S
       S1 = S1 - OFFS
       S1_SF = S1_SF - OFFS
       SMEAN1 = SMEAN1 - OFFS
+#  if defined (FISOC_RUNOFF)
+      SsubRunoff   = SsubRunoff-OFFS(:,1)
 #  endif
 
+#  endif
 
 # if ! defined(MPDATA)
 # if defined (ONE_D_MODEL)
@@ -1064,6 +1106,17 @@ SUBROUTINE ADV_S
         END IF
      END IF
   END IF
+  
+  
+!--  For FISOC subglacial runoff ------------------------------------
+# if defined(FISOC_RUNOFF)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - subRunoff(I)/KBM1*SsubRunoff(I)  
+         END DO
+   END DO
+# endif  
+  
 !---------------------------------------------------------------------
 # endif
 

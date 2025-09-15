@@ -52,6 +52,9 @@ MODULE MOD_ICE
 #  endif
 ! --end
 
+# if defined (ICESHELF)
+  USE MOD_ISF
+# endif
 !====================================================================
 !--------------------------------------------------------------
 !   for cice code
@@ -530,6 +533,9 @@ MODULE MOD_ICE
          frzmlt(i,j) = (Tf(i,j)-sst(i,j))*cp_ocn*rhow*(D(I))*DZ(I,1)/dtice
 # if !defined (ICE_FRESHWATER)
          frzmlt(i,j) = min(max(frzmlt(i,j),-c1000),c1000)
+# endif
+# if defined (ICESHELF)
+         IF(ISISFN(I)==1) frzmlt(i,j) = 0.0_SP
 # endif
 
          if (sst(i,j) <= Tf(i,j)) then
@@ -1066,6 +1072,9 @@ LWRAD_WATTS(I) = flwitot(I,1)*aice(I,1) + flwtot(I,1)*(c1i-aice(i,jlo))
        IMASS(I) = (RHOI*VICE(I,1) + RHOS*VSNO(I,1)) ! kg/m^2
        IF (IMASS(I) >p01) ISICEN(I) =1
        END IF
+# if defined (ICESHELF)
+     IF(ISISFN(I)==1) ISICEN(I) = 0
+# endif
      END DO
 
 # if defined (MULTIPROCESSOR)
@@ -1091,6 +1100,10 @@ LWRAD_WATTS(I) = flwitot(I,1)*aice(I,1) + flwtot(I,1)*(c1i-aice(i,jlo))
       IF(sum(ISICEN(NV(I,1:3))) > 0 .and.IMASS1(I)>p01  &
          .and. AIU(I)>P001) &
       ISICEC(i)=1
+# if defined (ICESHELF)
+     IF(ISISFC(I)==1) ISICEC(I) = 0
+# endif
+
    END DO
 
    Deallocate(AICETMP)
