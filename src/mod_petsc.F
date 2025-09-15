@@ -112,6 +112,10 @@ use petscis
   VecScatter  :: G2L
   PetscInt    :: ITS
   ISLocalToGlobalMapping :: ISL2G
+# if defined (PETSC_C)
+  ISLocalToGlobalMapping :: ISL2G_row, ISL2G_col
+# endif
+
 # endif
 
 # if defined (WAVE_CURRENT_INTERACTION) && !defined (EXPLICIT)
@@ -572,7 +576,12 @@ use petscis
       PTMP(ICNT) = PLO_2_PGO(ICNT)-1
     ENDDO
   ENDDO
+# if defined (PETSC_A) || (PETSC_B)
   CALL ISLocalToGlobalMappingCreate(PETSC_COMM_SELF,PSIZE_WHALO,PTMP,ISL2G,IERR);CHKERRQ(IERR)
+# else
+  CALL ISLocalToGlobalMappingCreate(PETSC_COMM_SELF,BS,PSIZE_WHALO,PTMP,PETSC_COPY_VALUES,ISL2G_col,IERR);CHKERRQ(IERR)
+  CALL ISLocalToGlobalMappingCreate(PETSC_COMM_SELF,BS,PSIZE_WHALO,PTMP,PETSC_COPY_VALUES,ISL2G_row,IERR);CHKERRQ(IERR)
+# endif
   DEALLOCATE(PTMP)
 # endif
 
@@ -620,7 +629,11 @@ use petscis
 
   !allowing local indexing for assembly of matrix
 # if defined (NH)
+# if defined (PETSC_A) || (PETSC_B)  /* Siqi Li, PETSC@20230227 */
   CALL MatSetLocalToGlobalMapping(A,ISL2G,IERR);CHKERRQ(IERR)
+# else
+  CALL MatSetLocalToGlobalMapping(A,ISL2G_row,ISL2G_col,IERR);CHKERRQ(IERR)
+# endif
 # endif
 
 # if defined (SEMI_IMPLICIT) || (NH)
@@ -757,14 +770,24 @@ use petscis
   !---------------------------------------------------------
 # if defined (NH)
   CALL KSPCreate(MPI_FVCOM_GROUP,Ksp,IERR);CHKERRQ(IERR)
+# if defined (PETSC_A) || (PETSC_B)  /* Siqi Li, PETSC@20230227 */
   CALL KSPSetOperators(Ksp,A,A,SAME_NONZERO_PATTERN,IERR);CHKERRQ(IERR)
+# else
+  CALL KSPSetOperators(Ksp,A,A,IERR);CHKERRQ(IERR)
+# endif
   CALL KSPSetType(Ksp,KSPGMRES,IERR);CHKERRQ(IERR)
   CALL KSPGetPC(Ksp,Pc,IERR);CHKERRQ(IERR)
   CALL PCSetType(Pc,PCHYPRE,IERR);CHKERRQ(IERR)
   CALL PCHYPRESetType(Pc,"boomeramg",IERR);CHKERRQ(IERR)
   IF(USE_LAST) CALL KSPSetInitialGuessNonzero(Ksp,PETSC_TRUE,IERR);CHKERRQ(IERR)
+# if defined (PETSC_A) || (PETSC_B)  /* Siqi Li, PETSC@20230227 */
   CALL KSPSetTolerances(Ksp,RTOL,PETSC_DEFAULT_DOUBLE_PRECISION,  &
          PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,IERR);CHKERRQ(IERR) 
+# else
+  CALL KSPSetTolerances(Ksp,RTOL,PETSC_DEFAULT_REAL,  &
+         PETSC_DEFAULT_REAL,PETSC_DEFAULT_INTEGER,IERR);CHKERRQ(IERR)
+# endif
+
   CALL KSPSetFromOptions(Ksp,IERR);CHKERRQ(IERR)
 # endif
 
@@ -1032,7 +1055,13 @@ use petscis
 # endif
 
 # if defined (NH)
+# if defined (PETSC_A) || (PETSC_B)  /* Siqi Li, PETSC@20230227 */
   CALL MatCreateMPIAIJ(MPI_FVCOM_GROUP,PSIZE,PSIZE,PsizeGL,PsizeGL,0,DNNZ,0,ONNZ,A,IERR);CHKERRQ(IERR)
+# else
+  CALL MatCreateAIJ(MPI_FVCOM_GROUP,PSIZE,PSIZE,PsizeGL,PsizeGL,0,DNNZ,0,ONNZ,A,IERR);CHKERRQ(IERR)
+  CALL MatSetOption(A, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE, IERR);CHKERRQ(IERR)
+# endif
+
 # endif
 
 # if defined (SEMI_IMPLICIT) || (NH)

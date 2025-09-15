@@ -40,19 +40,8 @@ MODULE NON_HYDRO
   USE MOD_SPHERICAL, ONLY: ARCX, ARC 
 # endif
 
-  IMPLICIT NONE
 
-  PRIVATE
-  PUBLIC :: ALLOC_VARS_NH
-  PUBLIC :: ADV_W
-  PUBLIC :: VDIF_W
-  PUBLIC :: GEN_POISSON
-  PUBLIC :: UPDATE_QUVW
-  PUBLIC :: NAME_LIST_INITIALIZE_NH
-  PUBLIC :: NAME_LIST_PRINT_NH
-  PUBLIC :: NAME_LIST_READ_NH
-  PUBLIC :: GET_ISWETBC
-
+# if defined (PETSC_A) || (PETSC_B) 
 ! must include all necessary headers in petsc fortran interface
 #include "include/finclude/petsc.h"
 #include "include/finclude/petscvec.h"
@@ -65,6 +54,26 @@ MODULE NON_HYDRO
 #include "include/finclude/petscao.h"
 #include "include/finclude/petscvec.h90"
 #include "include/finclude/petscviewer.h"
+# else
+#include "petsc/finclude/petsc.h"
+use petscmat
+use petscvec
+use petscpc
+use petscksp
+use petscis
+# endif
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: ALLOC_VARS_NH
+  PUBLIC :: ADV_W
+  PUBLIC :: VDIF_W
+  PUBLIC :: GEN_POISSON
+  PUBLIC :: UPDATE_QUVW
+  PUBLIC :: NAME_LIST_INITIALIZE_NH
+  PUBLIC :: NAME_LIST_PRINT_NH
+  PUBLIC :: NAME_LIST_READ_NH
+  PUBLIC :: GET_ISWETBC
 
   INTEGER, PUBLIC                ::  PROJ_SWITCH
   REAL(SP), PUBLIC, ALLOCATABLE  ::  W4ZT(:,:), RHS(:,:), QP(:,:)
