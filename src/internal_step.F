@@ -649,7 +649,9 @@ SUBROUTINE INTERNAL_STEP
 
 !---> Siqi Li, LSF@20230420
    IF(NESTING_ON )THEN
+#  if !defined (NESTING_TS)
       CALL SET_VAR(IntTime,EL=ELF)
+#  endif      
    END IF
 
 #  if defined (GCN)
@@ -876,8 +878,10 @@ SUBROUTINE INTERNAL_STEP
 
 #   if !defined (NH)
     IF(NESTING_ON )THEN
+#   if !defined (NESTING_TS)  
       CALL SET_VAR(intTime,U=UF)
       CALL SET_VAR(intTime,V=VF)
+#   endif      
     END IF  
 #   endif
 
@@ -1074,8 +1078,10 @@ SUBROUTINE INTERNAL_STEP
 
 #   if !defined (NH)
     IF(NESTING_ON )THEN
+#   if !defined (NESTING_TS)      
       CALL SET_VAR(intTime,U=UF)
       CALL SET_VAR(intTime,V=VF)
+#   endif      
     END IF
 #   endif
 
