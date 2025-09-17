@@ -1047,7 +1047,7 @@ SUBROUTINE ADV_T
                 TEMP=-WTS(I,K+1)*((T2(I,K)+T0(I,K)+T1(I,K))/3.0_SP*DZ(I,K+1)+(T2(I,K+1)+T0(I,K+1)+T1(I,K+1))/3.0_SP*DZ(I,K))/   &
                    (DZ(I,K)+DZ(I,K+1))
                ELSE IF(K == KBM1) THEN
-                TEMP= WTS(I,K)*((T2(I,K)+T0(I,K)+T1(I,K))/3.0_SP*DZ(I,K-1)+(T2(I,K-1)+T0(I,K-1)+T1(I,K-1))/3.0_SP*DZ(I,K))/(DZ(I,K):DZ(I,K-1))
+                TEMP=WTS(I,K)*((T2(I,K)+T0(I,K)+T1(I,K))/3.0_SP*DZ(I,K-1)+(T2(I,K-1)+T0(I,K-1)+T1(I,K-1))/3.0_SP*DZ(I,K))/(DZ(I,K)+DZ(I,K-1))
                ELSE
                  TEMP= WTS(I,K)*((T2(I,K)+T0(I,K)+T1(I,K))/3.0_SP*DZ(I,K-1)+(T2(I,K-1)+T0(I,K-1)+T1(I,K-1))/3.0_SP*DZ(I,K))/(DZ(I,K)+DZ(I,K-1))-&
                    WTS(I,K+1)*((T2(I,K)+T0(I,K)+T1(I,K))/3.0_SP*DZ(I,K+1)+(T2(I,K+1)+T0(I,K+1)+T1(I,K+1))/3.0_SP*DZ(I,K))/(DZ(I,K)+DZ(I,K+1))

@@ -120,7 +120,7 @@
   INTEGER :: IC,IS,ID,I,INDX
   REAL    :: NN(1:MSC), ND(1:MSC)                                    
   REAL    :: DEP2(MT),KWAVEL,CGOL
-  REAL    :: DEPLOC,SPCSIGL
+  REAL    :: DEPLOC,SPCSIGL(1)
 
   DEPLOC = (DEP2(NV(I,1))+DEP2(NV(I,2))+DEP2(NV(I,3)))/3.0
   IF(DEPLOC <= DEPMIN)THEN
@@ -129,7 +129,7 @@
     CGOL   = 0.                                            
   ELSE
 !   *** call KSCIP1 to compute KWAVE and CGO ***
-    SPCSIGL = SPCSIG(IS)
+    SPCSIGL(1) = SPCSIG(IS)
     CALL KSCIP1(1,SPCSIGL,DEPLOC,KWAVEL,CGOL,NN,ND)                                 
   END IF
 
