@@ -1326,12 +1326,12 @@ MODULE MOD_ACTION_EX
   USE SWCOMM4
   USE OCPCOMM4
   USE M_PARALL
-  USE ALL_VARS
+  USE ALL_VARS, aice_1D => aice, vice_1D => vice
   USE VARS_WAVE
 # if defined (SPHERICAL)
   USE MOD_SPHERICAL
 # endif
-  USE ICE_STATE
+  USE ICE_STATE, ONLY: aice_nudge => aice, vice_nudge => vice 
 
 !  USE ice_state  , only :aice , vice!, floe_diam
 !  USE ICE_THERM_VERTICAL ,only:hicen_old
@@ -1360,7 +1360,7 @@ MODULE MOD_ACTION_EX
 # if defined (WAVE_ONLY)
   C_ICE=(CICE_TEST(IA)+CICE_TEST(IB))/2.0_SP
 # else
-  C_ICE=(aice(IA,1)+aice(IB,1))/2.0_SP
+  C_ICE=(aice_nudge(IA,1)+aice_nudge(IB,1))/2.0_SP
 # endif
   floe_diam=200
 # if defined (SPHERICAL)
