@@ -162,7 +162,8 @@ MODULE MOD_ICENUDGE
   T_f(:)    = 0.0_SP
 
 !  compute the surface freezing temperature 
-    T_AIR = T_AIR - 273.16_SP       ! from K to ^oC
+    !T_AIR = T_AIR - 273.16_SP       ! from K to ^oC
+    T_AIR = T_AIR  ! It seems that T_AIR is no longer converted to K in mod_force.F, Qin20250924
     S_TMP = S1(:,1)	
     T_f    = -depressT*S_TMP 
    !  compute basal melting
