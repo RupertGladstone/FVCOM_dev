@@ -1326,7 +1326,7 @@ MODULE MOD_ACTION_EX
   USE SWCOMM4
   USE OCPCOMM4
   USE M_PARALL
-  USE ALL_VARS, aice_1D => aice, vice_1D => vice
+ ! USE ALL_VARS, aice_1D => aice, vice_1D => vice
   USE VARS_WAVE
 # if defined (SPHERICAL)
   USE MOD_SPHERICAL
