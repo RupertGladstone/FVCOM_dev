@@ -172,7 +172,7 @@ MODULE MOD_ICENUDGE
 # if defined (ICESHELF)
       IF (ABS(ISISFN(I))==1) AICE(I) = 0.0_SP
 # endif
-     IF(AICE(I)>=1.0E-5_SP | HICE(I)>=1.0E-5_SP )  THEN
+     IF(AICE(I)>=1.0E-5_SP .OR. HICE(I)>=1.0E-5_SP )  THEN
 				 
          ! SW penetrating thru ice into ocean, only visible components (28% direct and 24% diffuse) absorbed 
           ! in the ice interior or transmitted to the ocean & assume frsnow = 0
