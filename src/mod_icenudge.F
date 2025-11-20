@@ -172,7 +172,7 @@ MODULE MOD_ICENUDGE
 # if defined (ICESHELF)
       IF (ABS(ISISFN(I))==1) AICE(I) = 0.0_SP
 # endif
-     IF(AICE(I)>=1.0E-5_SP .OR. HICE(I)>=1.0E-5_SP )  THEN
+     IF(AICE(I)>=1.0E-5_SP .AND. HICE(I)>=1.0E-5_SP )  THEN
 				 
          ! SW penetrating thru ice into ocean, only visible components (28% direct and 24% diffuse) absorbed 
           ! in the ice interior or transmitted to the ocean & assume frsnow = 0
@@ -197,7 +197,7 @@ MODULE MOD_ICENUDGE
             hw      =  rhoi*dhdt*DTI/rhow
 		  
           ! virtual salt flux and fresh water flux, ocean gets water & salt when dhdt<0 melting
-            FVSALT1(I) = (-1)*(Du/(Du+hw))*rhoi*dhdt*(S1(I,1)-ISALT(I))        ! g/m^2/s
+            FVSALT1(I) = (-1)*(Du/(Du+hw))*rhoi*dhdt*(S1(I,1)-ISALT(I))*AICE(I)        ! g/m^2/s
             Fct(I)     = (-1)*cp_ocn*(Du/(Du+hw))*rhoi*dhdt*(TF1(I,1)-T_f(I))       ! w/m^2
             S_TMP(I)   = S1(I,1) + (FVSALT1(I)*DTI)/(rhow*Du)
 	  END IF	  		  
