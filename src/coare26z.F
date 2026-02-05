@@ -52,15 +52,51 @@
    REAL(SP) :: ZO,ZOQ,ZOT,BF,QOUT,DELS,QCOL,ALQ,XLAMX,CH,CE,CDN_10,CHN_10,CEN_10,RR
    
    INTEGER  :: I
+
+   ! ---- new : Karsten Lettmann , Jan. 2018 --------
+   REAL(SP) :: EPSI = 1.0e-16_SP   ! small value to stabilize the code
+   ! -------- end new -------------------------------
+
 ! Set jcool=0 if Ts is surface, =1 if Ts is bulk.
 ! rcb checked 6/9/04
 ! set jcool=1 if Ts is bulk, 0 if Ts is true skin jcool=1;
-   JCOOL=1.
+
+! Changes to code:
+! - changed line for zetu to original coare3 code
+!   ZETU=CC*RIBU*(1._SP + 27._SP/9._SP*RIBU/CC)
+! - Changed number of iteration in Bulk loop to NITS = 3
+! - Set wind to have at least 0.1 m/s
+! - introduce a small epsi to stabilize similar to ROMS implementation in file bulk_fluxes.F
+
+
+
+
+! --------- New. karsten Lettmann -----
+#  if !defined (NO_COOL_SKIN_HEAT_FLUX)
+   JCOOL=1. ! original line
+#  else
+   !  Switch off the cool skin effect, as it might cause problems
+   ! Cool skin is not used
+   JCOOL=0.0_SP
+#  endif
+! ---------end new ----------------------------
+
 ! rename variables from fairall et al coare3 code
 
 
 ! wind speed (m/s) at height zr (m)
    U=UR
+
+!  --------- New. Karsten Lettmann ---------
+!  Always have some small wind to make the algorithm more stable
+!  At the moment U > 0.1 m/s is set
+#  if !defined(DOUBLE_PRECISION)
+   U=AMAX1(.1_SP,U)
+#  else
+   U=DMAX1(.1_SP,U)
+#  endif
+!  -----------------------------------------
+
 !  surface current speed in the wind direction(m/s)
    US=0.*UR
 !  water temperature (deg C)
@@ -69,6 +105,7 @@
    T=TA
 !  RELATIVE HUMIDITY (%) AT HEIGHT zq(M)
    RH=RH
+! ----- new: Karsten Lettmann, Feb. 2016 --------------------------
 !  SURFACE PRESSURE (mb)
 !   P=PA
    P=PA/100.  !ejw 8/15/2011 from pa to mb in this subroutine only
@@ -76,8 +113,9 @@
    RL=DLW
 !  DOWNWARD SHORTWAVE RADIATION (W/m2)
    RS=DSW
-!  CONVERT RH TO SPECIFIC HUMIDITY (G/KG)
+!  CONVERT RH TO SPECIFIC HUMIDITY at sea surface(G/KG)
    CALL QSAT26(TS,P,QSAT26S)
+   QS=0.98_SP*QSAT26S/1000._SP   ! and convert to KG/KG
 
    IF(.NOT. HEATING_FRESHWATER)THEN
      QS=0.98_SP*QSAT26S/1000._SP
@@ -93,8 +131,10 @@
 !   SET RAIN RATE (MM/HR) - KEEP AS OPTION
 
 !  ***********SET LOCAL CONSTANTS *********
-!    PBL HEIGHT (M)
-   ZI=600._SP
+   !ZI:  PBL HEIGHT (M)
+   !Zi:  Height (m) of atmospheric boundary layer (in ROMS: blk_Zabl = 600.m)
+   ZI = 600.0_SP
+
 !     LATITUDE (DEG,N=+)- GEORGES BANK
 !        LAT=42.
 ! ************SET CONSTANTS **************
@@ -201,11 +241,13 @@
 !*************** bulk loop ************
     do I=1,nits !MDR uncomment to do iterations, was hardwired to 1 iteration
 !MDR   DO I=1,1
-     ZET=VON*GRAV*ZU/TA*(TSR*(1._SP+0.61_SP*Q)+0.61_SP*TA*QSR)/   &
-         (USR*USR)/(1._SP+0.61_SP*Q)
-     ZO=CHARN*USR*USR/GRAV+0.11_SP*VISA/USR
+!     Karsten Lettmann version is commented below - I'm not sure if this version where 
+!     TA occurs earlier in the equation is more stable. I've left this in case it's not.
+!     ZET=VON*GRAV*ZU*(TSR*(1._SP+0.61_SP*Q)+0.61_SP*TA*QSR)/(TA*(USR*USR)*(1._SP+0.61_SP*Q) + EPSI)
+     ZET=VON*GRAV*ZU/TA*(TSR*(1._SP+0.61_SP*Q)+0.61_SP*TA*QSR)/(USR*USR)/(1._SP+0.61_SP*Q)
+     ZO=CHARN*USR*USR/GRAV+0.11_SP*VISA/(USR+EPSI)
      RR=ZO*USR/VISA
-     L=ZU/ZET
+     L=ZU/(ZET+EPSI)
 #    if !defined(DOUBLE_PRECISION)
      ZOQ=AMIN1(1.15e-4_SP,5.5e-5_SP/(RR**0.6_SP)) 
 #    else
@@ -214,6 +256,13 @@
      ZOT=ZOQ
      CALL PSIU_26(ZU/L,PSIU_26S)
      USR=UT*VON/(LOG(ZU/ZO)-PSIU_26S)
+     ! ----- new, KL -------
+#    if !defined(DOUBLE_PRECISION)
+     USR=AMAX1(EPSI,USR)
+#    else
+     USR=DMAX1(EPSI,USR)
+#    endif
+     ! ---- end new --------
      CALL PSIT_26(ZT/L,PSIT_26S)
      TSR=-(DT-DTER*JCOOL)*VON*FDG/(LOG(ZT/ZOT)-PSIT_26S)
      CALL PSIT_26(ZQ/L,PSIT_26S)
@@ -240,14 +289,14 @@
      ALQ=AL*QCOL+BE*HLB*CPW/LE
 
      IF(ALQ > 0)THEN
-       XLAMX=6._SP/(1._SP+(BIGC*ALQ/USR**4)**0.75_SP)**0.333_SP
-       TKT=XLAMX*VISW/(SQRT(RHOA/RHOW)*USR)
+       XLAMX=6._SP/(1._SP+(BIGC*ALQ/(USR+EPSI)**4)**0.75_SP)**0.333_SP
+       TKT=XLAMX*VISW/(SQRT(RHOA/RHOW)*(USR+EPSI))
      ELSE
        XLAMX=6.0_SP
 #    if !defined(DOUBLE_PRECISION)
-       TKT=AMIN1(.01_SP,XLAMX*VISW/(SQRT(RHOA/RHOW)*USR))
+       TKT=AMIN1(.01_SP,XLAMX*VISW/(SQRT(RHOA/RHOW)*(USR+EPSI)))
 #    else
-       TKT=DMIN1(.01_SP,XLAMX*VISW/(SQRT(RHOA/RHOW)*USR))
+       TKT=DMIN1(.01_SP,XLAMX*VISW/(SQRT(RHOA/RHOW)*(USR+EPSI)))
 #    endif
      END IF
 !           cool skin
@@ -260,7 +309,7 @@
 
 !****** compute fluxes ******************************************
 !             wind stress
-   TAU=RHOA*USR*USR*DU/UT
+   TAU=RHOA*USR*USR*DU/(UT+EPSI)
 !              sensible heat flux
    HSB=RHOA*CPA*USR*TSR
 !              latent heat flux
@@ -269,12 +318,12 @@
 
 !****** compute transfer coeffs relative to ut @ meas. ht ********
 #  if !defined(DOUBLE_PRECISION)
-   CD=TAU/RHOA/UT/AMAX1(.1_SP,DU)
+   CD=TAU/RHOA/(UT+EPSI)/AMAX1(.1_SP,DU)
 #  else
-   CD=TAU/RHOA/UT/DMAX1(.1_SP,DU)
+   CD=TAU/RHOA/(UT+EPSI)/DMAX1(.1_SP,DU)
 #  endif
-   CH=-USR*TSR/UT/(DT-DTER*JCOOL)
-   CE=-USR*QSR/(DQ-DQER*JCOOL)/UT
+   CH=-USR*TSR/(UT+EPSI)/(DT-DTER*JCOOL)
+   CE=-USR*QSR/(DQ-DQER*JCOOL)/(UT+EPSI)
 
 !****** compute 10-m neutral coeff relative to ut ****************
    CDN_10=VON*VON/LOG(10._SP/ZO)/LOG(10._SP/ZO)
@@ -354,14 +403,31 @@
 
 !-----------------------------------------------------------
    SUBROUTINE QSAT26(T,P,QS)
-! computes saturation specific humidity
+   ! computes saturation specific humidity in g/kg
+   !
+   ! For Literature see e.g.:
+   !     - https://en.wikipedia.org/wiki/Clausius%E2%80%93Clapeyron_relation
+   !     - Jacobsen, Fundamentals of atmospheric modelling, page 28-33, 45
+   !       QS follows from eq (2.32) and p_d = P - ES
+
+   ! Input variables are:
+   ! T  : Temperature in °C
+   ! P  : total air pressure in hPa = mbar
    USE MOD_PREC
    
    IMPLICIT NONE
    REAL(SP) :: T,P,QS,ES
-   
+
+   ! first, calulate the saturation water pressure ES in hPa
+   ! Using a modified form of the August-Roche-Magnus formula
    ES=6.112_SP*EXP(17.502_SP*T/(T+241.0_SP))     &
       *(1.0007_SP+3.46_SP*0.000001_SP*P)
+
+   !second, specific humidity in (g water vapour) / (kg moist air)
+   !
+   ! 622 = 1000 * eps with eps = 0.622 = R_d / R_v (ratio of gas constants)
+   ! 0.378 = 1 - eps
+   !
    QS=ES*622/(P-.378_SP*ES)
    
    RETURN
