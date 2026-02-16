@@ -48,14 +48,14 @@
 #========== TOPDIR ========================================================
 # TOPDIR is the directory in which this make file and the fvcom source reside
 
-           TOPDIR        = /cluster/home/mib/Code/FVCOM_petsc/FVCOM_chen/src
+           TOPDIR        = /cluster/home/qin/FVCOM_dev/src
 #EXAMPLE
 # TOPDIR = /home/user/cchen/FVCOM_source
 # TOPDIR must be set!
 #========== INSTALLDIR =====================================================
 # INSTALLDIR is the directory where you wish to install external libraries
 # The default is in the $(TOPDIR)/libs/install, but you can choose...
-            INSTALLDIR    = /cluster/home/mib/Code/FVCOM_petsc/FVCOM_chen/src/libs/install
+            INSTALLDIR    = /cluster/home/qin/fvcom-petsc/FVCOM_chen/src_semi/libs/install
 #===========================================================================
 # PREPROCESSOR OPTIONS FOR CPP
 #            DEF_FLAGS     = -P -C -traditional 
@@ -98,7 +98,7 @@ endif
 #                           SET PATH TO LIBRARIES WITH IOLIBS      
 #                           SET PATH TO INCLUDE FILES (netcdf.mod) WITH IOINCS
 #--------------------------------------------------------------------------
-            FLAG_USE_NETCDF4     = -DUSE_NETCDF4
+
 #            FLAG_USE_COMPRESSION = -DUSE_COMPRESSION
             IOLIBS  = -L/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/lib -lnetcdff -lnetcdf
             IOINCS  = -I/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/include
@@ -140,10 +140,10 @@ endif
 #                           UNCOMMENT TO SELECT DOUBLE PRECISION
 #--------------------------------------------------------------------------
 
-#            FLAG_1 =  -DDOUBLE_PRECISION 
+            FLAG_1 =  -DDOUBLE_PRECISION 
 
 #        SINGLE PRECISION OUTPUT FOR VISIT
-            FLAG_1 =  -DDOUBLE_PRECISION -DSINGLE_OUTPUT
+#            FLAG_1 =  -DDOUBLE_PRECISION -DSINGLE_OUTPUT
 
 #--------------------------------------------------------------------------
 #        SPHERICAL          SELECT SPHERICAL COORDINATES FOR INTEGRATION
@@ -161,7 +161,7 @@ endif
 #                           UNCOMMENT TO INCLUDE FLOODYING/DRYING
 #--------------------------------------------------------------------------
 
-             FLAG_3 = -DWET_DRY
+#             FLAG_3 = -DWET_DRY
 
 #--------------------------------------------------------------------------
 #        MULTI_PROCESSOR    INCLUDES PARALLELIZATION WITH MPI
@@ -422,7 +422,7 @@ endif
 #         2. CALCULATE THE NET HEAT FLUX USING SOLAR HEATING MODULE                          
 #--------------------------------------------------------------------------
 
-#            FLAG_27 = -DHEATING_CALCULATED  
+             FLAG_27 = -DHEATING_CALCULATED  
 #            FLAG_27 = -DHEATING_SOLAR  
 
 #--------------------------------------------------------------------------
@@ -451,7 +451,7 @@ endif
 #        NON-HYDROSTATIC MODEL:
 #--------------------------------------------------------------------------
 
-             FLAG_30 =  -DNH
+          FLAG_30 =  -DNH
 
 #--------------------------------------------------------------------------
 #        PARTICLE TRACKING
@@ -505,13 +505,6 @@ endif
 #        DEVELOPMENT FLAGS
 #            FOR BETA WORK ONLY 
 #--------------------------------------------------------------------------
-#         Dynamic/Thermodynamic IceShelf and ice model coupling options
-#--------------------------------------------------------------------------
-# -DISOMIP 
-#            CPP_MISC ?= -DICESHELF -DICEDRAFTMORPHY -DFVCOM_API -DFISOC_DDDT -DFISOC_DSDT -DFISOC_DRAFT
-            CPP_MISC = -DFAKEICEDRAFT -DICESHELF -DICEDRAFTMORPHY -DFVCOM_API -DFISOC_DDDT  -DFISOC_DRAFT
-#            CPP_MISC = -DICENUDGE
-
 
 #             FLAG_101 = -DDEVELOP1
 #             FLAG_102 = -DDEVELOP2
@@ -614,10 +607,11 @@ endif
          COMPILER = -DGFORTRAN
          CC       = mpicc
          CXX      = mpicxx
-         CFLAGS   = -O3
+	 CFLAGS   = -O3
          FC       = mpif90
          DEBFLGS  = -cpp
-         OPT      = -O3 -g -fallow-argument-mismatch -ffree-line-length-none
+	 OPT      = -O3 -g -fallow-argument-mismatch -ffree-line-length-none
+	 
 
 #--------------------------------------------------------------------------
 #  gfortran defs 
@@ -686,7 +680,7 @@ endif
    $(FLAG_43) $(FLAG_44) $(FLAG_45) $(FLAG_80) $(FLAG_81) $(FLAG_LAM) $(FLAG_411) \
    $(FLAG_101) $(FLAG_102) $(FLAG_103) $(FLAG_104) $(FLAG_105) $(FLAG_321)\
    $(FLAG_211) $(FLAG_212) $(FLAG_213) $(FLAG_251) $(FLAG_261) $(FLAG_262)\
-   $(FLAG_USE_NETCDF4) $(FLAG_USE_COMPRESSION) $(CPP_MISC)
+   $(FLAG_USE_NETCDF4) $(FLAG_USE_COMPRESSION)
 #--------------------------------------------------------------------------
 #  Libraries           
 #--------------------------------------------------------------------------

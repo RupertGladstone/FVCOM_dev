@@ -676,7 +676,30 @@ SUBROUTINE ADV_S
          END DO
    END DO
 # endif  
-
+  !---------------------------------------------------------------------------
+    ! APPLY GROUND WATER SALINITY FORCING
+  IF(GROUNDWATER_ON .and. GROUNDWATER_SALT_ON)THEN
+     DO I=1,M
+        XFLUX(I,KBM1)=XFLUX(I,KBM1)-BFWDIS(I)*BFWSLT(I)
+     END DO
+  ELSEIF(GROUNDWATER_ON) THEN
+     DO I=1,M
+!        XFLUX(I,KBM1)=XFLUX(I,KBM1)-BFWDIS(I)*S1(I,KBM1)/DZ(I,KBM1)
+!J. Ge for tracer advection
+        IF(BACKWARD_ADVECTION.eqv..FALSE.)THEN
+          XFLUX(I,KBM1)=XFLUX(I,KBM1)-BFWDIS(I)*S1(I,KBM1)
+        ELSE
+          IF(BACKWARD_STEP==1)THEN
+            XFLUX(I,KBM1)=XFLUX(I,KBM1)-BFWDIS(I)*(S0(I,KBM1)+S1(I,KBM1))*0.5
+          ELSEIF(BACKWARD_STEP==2)THEN
+            XFLUX(I,KBM1)=XFLUX(I,KBM1)-BFWDIS(I)*(S2(I,KBM1)+S0(I,KBM1)+S1(I,KBM1))/3.0_SP
+          ENDIF
+        ENDIF
+!J. Ge for tracer advection
+     END DO
+  END IF
+  
+  
   ! -------------------------------------------------------------------
   !        The horizontal term of advection is neglected here
   ! -------------------------------------------------------------------
