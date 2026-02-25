@@ -231,6 +231,9 @@ SUBROUTINE ADV_T
     ! Adding offset to avoid less-than-zero problems
       T1 = T1+OFFS
       TMEAN1 = TMEAN1+OFFS
+# if defined (PLUME)
+      TPLM = TPLM+OFFS
+# endif
 # if defined (FISOC_RUNOFF)
       T_b = T_b+OFFS(:,1)
 # endif
@@ -717,6 +720,18 @@ SUBROUTINE ADV_T
   END IF
 
   ! We remove the offset at the end of the smolarkiewicz loop
+
+  !---------------------Plume flux part-----------------------------------------
+  ! Added by Qin 06/03/2019
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - FLXPLM(I,K)*TPLM(I,K)  
+         END DO
+   END DO
+# endif
+# endif
   !---------------------FISOC subglacial runoff-----------------------------------------
   ! Added by Qin 24/04/2024
 # if defined(FISOC_RUNOFF)
@@ -795,9 +810,15 @@ SUBROUTINE ADV_T
            IF(K == 1)THEN
               TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),K))
               TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K+1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K+1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+# elif defined (FISOC_RUNOFF)
               TMAX = MAX(TMAX,T1(I,K+1),T1(I,K),T1_FRESH(I,K),T_b(I))
               TMIN = MIN(TMIN,T1(I,K+1),T1(I,K),T1_FRESH(I,K),T_b(I))
+# elif defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K+1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K+1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
 # else
               TMAX = MAX(TMAX,T1(I,K+1),T1(I,K),T1_FRESH(I,K))
               TMIN = MIN(TMIN,T1(I,K+1),T1(I,K),T1_FRESH(I,K))
@@ -805,9 +826,15 @@ SUBROUTINE ADV_T
            ELSEIF(K == KBM1) THEN
               TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),K))
               TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+# elif defined (FISOC_RUNOFF)
               TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
               TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
+# elif defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
 # else
               TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K))
               TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K))
@@ -815,10 +842,15 @@ SUBROUTINE ADV_T
            ELSE
               TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),K))
               TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+# elif defined (FISOC_RUNOFF)
               TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
               TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
-
+# elif defined (PLUME)
+              TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
+              TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
 # else
               TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K))
               TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K))
@@ -887,9 +919,15 @@ SUBROUTINE ADV_T
      DO I=1,M
         TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),1))
         TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),1))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+        TMAX = MAX(TMAX,T1(I,2),T1(I,1),T1_FRESH(I,1),T_b(I),TPLM(I,1))
+        TMIN = MIN(TMIN,T1(I,2),T1(I,1),T1_FRESH(I,1),T_b(I),TPLM(I,1))
+# elif defined (FISOC_RUNOFF)
         TMAX = MAX(TMAX,T1(I,2),T1(I,1),T1_FRESH(I,1),T_b(I))
         TMIN = MIN(TMIN,T1(I,2),T1(I,1),T1_FRESH(I,1),T_b(I))
+# elif defined (PLUME)
+        TMAX = MAX(TMAX,T1(I,2),T1(I,1),T1_FRESH(I,1),TPLM(I,1))
+        TMIN = MIN(TMIN,T1(I,2),T1(I,1),T1_FRESH(I,1),TPLM(I,1))
 # else
         TMAX = MAX(TMAX,T1(I,2),T1(I,1),T1_FRESH(I,1))
         TMIN = MIN(TMIN,T1(I,2),T1(I,1),T1_FRESH(I,1))
@@ -910,9 +948,15 @@ SUBROUTINE ADV_T
         DO I=1,M
            TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),K))
            TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+           TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+           TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+# elif defined (FISOC_RUNOFF)
            TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
            TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
+# elif defined (PLUME)
+           TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
+           TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
 # else
            TMAX = MAX(TMAX,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K))
            TMIN = MIN(TMIN,T1(I,K+1),T1(I,K-1),T1(I,K),T1_FRESH(I,K))
@@ -936,9 +980,15 @@ SUBROUTINE ADV_T
      DO I=1,M
         TMAX = MAXVAL(T1(NBSN(I,1:NTSN(I)),K))
         TMIN = MINVAL(T1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+        TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+        TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I),TPLM(I,K))
+# elif defined (FISOC_RUNOFF)
         TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
         TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),T_b(I))
+# elif defined (PLUME)
+        TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
+        TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K),TPLM(I,K))
 # else
         TMAX = MAX(TMAX,T1(I,K-1),T1(I,K),T1_FRESH(I,K))
         TMIN = MIN(TMIN,T1(I,K-1),T1(I,K),T1_FRESH(I,K))
@@ -992,6 +1042,9 @@ SUBROUTINE ADV_T
       T1 = T1-OFFS
       T1_SF = T1_SF-OFFS
       TMEAN1 = TMEAN1-OFFS
+# if defined (PLUME)
+      TPLM = TPLM-OFFS
+# endif
 # if defined (FISOC_RUNOFF)
       T_b = T_b-OFFS(:,1)
 # endif     
@@ -1142,6 +1195,16 @@ SUBROUTINE ADV_T
      END IF
   END IF
   !---------------------------------------------------------------------
+  !--  For Plume influx ------------------------------------
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - FLXPLM(I,K)*TPLM(I,K) 
+         END DO
+   END DO
+# endif
+# endif
 !-- FISOC subglacial runoff ------------------------------------
 # if defined(FISOC_RUNOFF)
    DO I=1,M

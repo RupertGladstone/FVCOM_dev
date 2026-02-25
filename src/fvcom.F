@@ -482,6 +482,10 @@ PROGRAM FVCOM
   USE MOD_ICE
 # endif
 
+# if defined (PLUME_CALCULATED)
+  USE MOD_PLUME
+# endif
+
 ! Added by researchers at Akvaplan-niva 2018, idealized tests give promising results.
 # if defined (TVD)
   USE MOD_TVD
@@ -490,6 +494,11 @@ PROGRAM FVCOM
 ! Added by Qin at Akvaplan-niva 2019
 # if defined (ICESHELF)
     USE MOD_ISF
+# endif
+
+! Added by Akvaplan-niva 2019, still under development - but we use it in projects
+# if defined (PLUME_CALCULATED)
+  USE MOD_PLUME_GRID
 # endif
 
 ! Added by Qin at Akvaplan-niva 2021
@@ -664,6 +673,13 @@ PROGRAM FVCOM
    CALL SETUP_TVD
 # endif
 
+  !=============================================================================!
+  ! SETUP THE PLUME MODEL (IN DEVELOPMENT)                                      !
+  !=============================================================================!  
+# if defined (PLUME_CALCULATED)
+  CALL SETUP_PLUME_GRID
+# endif
+
 !JQI  !==============================================================================!
 !JQI  !  SETUP THE MODEL FORCING                                                     !
 !JQI  !==============================================================================!
@@ -690,6 +706,9 @@ PROGRAM FVCOM
   !==============================================================================!
   !  SETUP OTHER TOOLS, MODELS AND DATA ASSIMILATION                             !
   !==============================================================================!
+# if defined (PLUME_CALCULATED)
+  CALL   PLUME_CALCULATE_INIT
+# endif
 
 # if defined (ICE)
   IF(ICE_MODEL) CALL ICE_INIT_0

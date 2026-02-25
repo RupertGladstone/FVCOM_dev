@@ -857,6 +857,21 @@ use petscis
   END IF
 ! end add source terms
 
+!--------external source terms from plume
+! added by Qin, 07/08/2019
+  ALLOCATE(XFLUX_EXT_PLM(0:MT,KBM1)) ;  XFLUX_EXT_PLM = 0.0_SP
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+  DO I=1,M
+        DO K=1,KBM1
+          XFLUX_EXT_PLM(I,K)=XFLUX_EXT_PLM(I,K)-FLXPLM(I,K)*VDISTPLM(I,K)
+        END DO
+    END DO
+# endif
+# endif
+
+!--------------------------------------------
+
   CALL VecSet(BLOCAL,ZERO,IERR);CHKERRQ(IERR)
   CALL VecSet(B,ZERO,IERR);CHKERRQ(IERR)
   RHS = 0.0_SP
@@ -906,6 +921,11 @@ use petscis
 
     DO K=1, KBM1
       RHS(I,K) = RHS(I,K) + 1.0E3_SP*XFLUX_EXT(I,K)/DTI
+# if defined (PLUME)
+# if defined(PLUME_CALCULATED)
+     RHS(I,K) = RHS(I,K) + 1.0E3_SP*XFLUX_EXT_PLM(I,K)/DTI
+# endif
+# endif
     ENDDO
 
   ENDDO
@@ -2267,6 +2287,19 @@ use petscis
   END IF
 ! add external source
 
+!---------------------- external source from plume------------------
+!Added by Qin 07/03/2019
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+  DO I=1,M
+        DO K=1,KBM1
+          XFLUX(I,K)=XFLUX(I,K)-FLXPLM(I,K)*VDISTPLM(I,K)
+        END DO
+    END DO
+# endif 
+# endif
+!------------------------------------------------------------------
+
   DO I=1, M
     W4ZT(I,KB) = -AVG_U(I,KBM1)*A1AVGD(I) - AVG_V(I,KBM1)*A2AVGD(I)
   ENDDO
@@ -2413,6 +2446,15 @@ use petscis
     END IF
   END IF
 ! add external source
+!---------------------- external source from plume------------------
+!Added by Qin 07/03/2019
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+     DO I=1,M
+       XFLUX(I)=XFLUX(I)-SUM(FLXPLM(I,1:KBM1))
+      END DO
+# endif
+# endif
 
   DO I=1, M
     PETSc_POS = ALO_2_PLO_NODE(I)

@@ -222,7 +222,18 @@
        END DO
      END IF
    END IF
-   
+!---------------PLUME  FLUX----------------------
+!Added by Qin 05/03/2019
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+     DO I=1,M
+       DO K=1,KBM1
+           XFLUX(I,K)=XFLUX(I,K)-FLXPLM(I,K)
+       END DO
+      END DO
+# endif
+# endif
+
 !---------------SUBGLACIAL RUNOFF ----------------------
 !Added by Qin 24/04/2024
 # if defined(FISOC_RUNOFF)

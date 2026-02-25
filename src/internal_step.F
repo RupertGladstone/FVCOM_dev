@@ -53,6 +53,13 @@ SUBROUTINE INTERNAL_STEP
 # if defined (SEMI_IMPLICIT)
   USE MOD_SEMI_IMPLICIT
 # endif
+# if defined (PLUME)
+  USE MOD_PLUME
+  USE MOD_FORCE
+# endif
+# if defined (PUMP)
+  USE MOD_FORCE
+# endif
 # if defined (BALANCE_2D)
   USE MOD_BALANCE_2D
 # endif
@@ -122,6 +129,9 @@ SUBROUTINE INTERNAL_STEP
 # if defined (SEDIMENT)
   REAL(DP) :: DPDAYS
   REAL(SP) :: SPDAYS
+# endif
+# if defined (PLUME_CALCULATED)
+  INTEGER :: PLM, IERR
 # endif
 # if defined (WAVE_ONLY)
   LOGICAL :: wa_on
@@ -274,6 +284,19 @@ SUBROUTINE INTERNAL_STEP
 #   if !defined (ONE_D_MODEL)
     CALL ADJUST2D3D(1)
 #   endif
+
+  ! ---- RUN THE PLUME MODEL ----------------------------------------------------!
+#   if defined (PLUME_CALCULATED)
+      IF (NUMPLM_GL .GT. 0) THEN
+         CALL UPDATE_PLUMES(IntTime,QPLMDIS,TEMP=TPLMDIS,SALT=SPLMDIS)
+#    if defined(FABM)
+         IF (FABM_MODEL) CALL UPDATE_PLUMES(IntTime,QPLMDIS,FABMR=FABMPLMDIS)                               
+
+#    endif  
+         CALL UPDATE_PLUMES_CALCULATED
+      END IF
+#   endif
+
 
   !----SPECIFY THE SOLID BOUNDARY CONDITIONS OF U&V INTERNAL MODES---------------!
 #   if defined (GCN)

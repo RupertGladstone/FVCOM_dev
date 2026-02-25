@@ -184,6 +184,16 @@
      END IF
    END IF
 
+!---------ADJUST FLUX FOR PLUME DISCHARGE--------------------------------!
+! added by Qin, 05/03/2019, should not be so complicated. 
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+   DO I=1,M
+       XFLUX(I)=XFLUX(I) - SUM(FLXPLM(I,1:KBM1))
+   END DO
+# endif
+# endif
+
 !---------ADJUST FLUX FOR SUBGLACIAL RUNOFF -----------------------------------!
 ! added by Qin, 24/04/2024, should not be so complicated. 
 # if defined(FISOC_RUNOFF)

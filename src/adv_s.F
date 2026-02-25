@@ -141,6 +141,9 @@ SUBROUTINE ADV_S
 #   if defined (FISOC_RUNOFF)
       SsubRunoff   = SsubRunoff+OFFS(:,1)
 #   endif  
+#   if defined (PLUME)
+      SPLM   = SPLM+OFFS
+#   endif
 # endif
 
   !
@@ -675,7 +678,20 @@ SUBROUTINE ADV_S
              XFLUX(I,K)=XFLUX(I,K) - subRunoff(I)/KBM1*SsubRunoff(I)
          END DO
    END DO
-# endif  
+# endif
+  
+  !---------------------Plume flux part-----------------------------------------
+  ! Added by Qin 05/03/2019
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - FLXPLM(I,K)*SPLM(I,K)  
+         END DO
+   END DO
+# endif
+# endif
+
   !---------------------------------------------------------------------------
     ! APPLY GROUND WATER SALINITY FORCING
   IF(GROUNDWATER_ON .and. GROUNDWATER_SALT_ON)THEN
@@ -902,9 +918,15 @@ SUBROUTINE ADV_S
         DO I=1,M
            SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
            SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
+# if defined (FISOC_RUNOFF) && defined (PLUME)
+           SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I),SPLM(I,K))
+           SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I),SPLM(I,K))
+# elif defined (FISOC_RUNOFF)
            SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
            SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
+# elif defined (PLUME)
+           SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SPLM(I,K))
+           SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K),SPLM(I,K))
 # else
            SMAX = MAX(SMAX,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
            SMIN = MIN(SMIN,S1(I,K+1),S1(I,K-1),S1(I,K),S1_FRESH(I,K))
@@ -925,15 +947,7 @@ SUBROUTINE ADV_S
 
      K=KBM1
      DO I=1,M
-        SMAX = MAXVAL(S1(NBSN(I,1:NTSN(I)),K))
-        SMIN = MINVAL(S1(NBSN(I,1:NTSN(I)),K))
-# if defined (FISOC_RUNOFF)
-        SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
-        SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K),SsubRunoff(I))
-# else
-        SMAX = MAX(SMAX,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
-        SMIN = MIN(SMIN,S1(I,K-1),S1(I,K),S1_FRESH(I,K))
-# endif
+
         TEMP=0.5*((WWWS(I,K+1)+ABS(WWWS(I,K+1)))*S1_S(I,K+1)-  &
              (WWWS(I,K)-ABS(WWWS(I,K)))*S1_S(I,K-1))*(DTI/DTFA(I))/DZ(I,K)
         BETAIN(I,K)=(SMAX-S1_S(I,K))/(TEMP+1.E-10)
@@ -985,7 +999,9 @@ SUBROUTINE ADV_S
 #  if defined (FISOC_RUNOFF)
       SsubRunoff   = SsubRunoff-OFFS(:,1)
 #  endif
-
+#    if defined (PLUME)
+      SPLM   = SPLM-OFFS
+#    endif
 #  endif
 
 # if ! defined(MPDATA)
@@ -1129,7 +1145,16 @@ SUBROUTINE ADV_S
         END IF
      END IF
   END IF
-  
+!--  For Plume influx ------------------------------------
+# if defined(PLUME)
+# if defined(PLUME_CALCULATED)
+   DO I=1,M
+         DO K=1,KBM1
+             XFLUX(I,K)=XFLUX(I,K) - FLXPLM(I,K)*SPLM(I,K)  
+         END DO
+   END DO
+# endif
+# endif
   
 !--  For FISOC subglacial runoff ------------------------------------
 # if defined(FISOC_RUNOFF)
