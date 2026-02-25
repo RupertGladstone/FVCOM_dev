@@ -491,7 +491,7 @@ CONTAINS
     RIVER_VERTICAL_DISTRIBUTION = "FUNCTIONAL VERTICAL RIVER DISTROBUTION: SEE FVCOM MANUAL FOR HELP"
 # endif
     SOURCE_POINT_DIRECTION = 0.0
- # if defined (PLUME)
+# if defined (PLUME)
     !--Paramers in NameList NML_PLUME_TYPE, added by Qin, 04/03/2019
     PLUME_NUMBER          =  -1
     PLUME_KIND            = "Options:"//TRIM(PRDC)//" or "//TRIM(VRBL)
