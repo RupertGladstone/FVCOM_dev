@@ -501,6 +501,28 @@ endif
 #--------------------------------------------------------------------------
 #             FLAG_45 = -DVEGETATION
 
+#---------------------------------------------------------------------------
+#       Ice shelf-ocean interaction module
+#--------------------------------------------------------------------------
+#           FLAG_51  = -DICESHELF
+
+#---------------------------------------------------------------------------
+#       Ice Nudge module, treating sea ice as boundary conditions
+#       (momentum, heat and freshwater flux)
+#--------------------------------------------------------------------------
+#            FLAG_52  = -DICENUDGE
+#           FLAG_521 = -DICENUDGE_DIAGNOSIS
+#---------------------------------------------------------------------------
+#       MTT plume model, takes a bottom hydrothermal source
+#       (heat/salt/tracer flux) and computes how a buoyant plume rises and
+#       entrains ambiet water using MTT theory, then injects the diluted
+#       plume water into the model grid at the height where it becomes
+#       neutrally buoyant.
+#--------------------------------------------------------------------------
+#           FLAG_61  = -DPLUME
+#           FLAG_611 = -DPLUME_CALCULATED
+
+
 #--------------------------------------------------------------------------
 #        DEVELOPMENT FLAGS
 #            FOR BETA WORK ONLY 

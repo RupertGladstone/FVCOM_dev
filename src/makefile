@@ -71,7 +71,8 @@ MODS  = mod_prec.F	sinter.F	mod_types.F	mod_time.F	\
 	ice_scaling.F	ice_atmo.F	ice_ocean.F	ice_therm_vertical.F\
 	ice_init.F	ice_therm_itd.F	mod_ice2d.F	mod_ice.F	\
 	mod_startup.F	mod_wqm.F	mod_ncdio.F	mod_setup.F	\
-	mod_newinp.F	particle.F	linklist.F	mod_lag.F	mod_isf.F \
+	mod_newinp.F	particle.F	linklist.F	mod_lag.F      \
+	mod_isf.F       mod_icenudge.F  mod_plume.F     mod_plume_grid.F \
 	mod_northpole.F mod_pwp.F	mod_dye.F	mod_optimal_interpolation.F\
 	mod_report.F	mod_probe.F	mod_gotm.F	mod_balance_2d.F\
 	mod_tridiag.F	mod_scal.F	mod_meanflow.F	mod_obcs2.F	\

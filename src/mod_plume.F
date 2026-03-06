@@ -61,7 +61,23 @@ MODULE MOD_PLUME
     & PLUME_DIFFUSOR_RADIUS,                   &
     & PLUME_DIFFUSOR_DEPTH,                    &
     & PIPE_RADIUS
-	
+
+
+    REAL(SP) :: Rdiff, Wdiff, DIFF_VOL
+
+    REAL(SP), ALLOCATABLE :: FLXPLM(:,:)
+    REAL(SP), ALLOCATABLE :: TPLM(:,:)
+    REAL(SP), ALLOCATABLE :: SPLM(:,:)
+
+    INTEGER, ALLOCATABLE :: INODEPLM(:)
+    INTEGER, ALLOCATABLE :: KSIGPLM(:)
+
+    REAL(SP), ALLOCATABLE :: TPLMDIS(:)
+    REAL(SP), ALLOCATABLE :: SPLMDIS(:)
+    REAL(SP), ALLOCATABLE :: QPLMDIS(:)
+
+    INTEGER :: NUMPLM_GL
+
     CONTAINS
 
 !==============================================================================|
@@ -133,6 +149,7 @@ MODULE MOD_PLUME
 ! Allocate variables output from the plume model	
 !==============================================================================|
       SUBROUTINE PLUME_CALCULATE_INIT
+      
       ALLOCATE(FLXPLM(0:MT,KB)) ;            FLXPLM     =   ZERO !  
       ALLOCATE(TPLM(0:MT,KB)) ;              TPLM       =   ZERO ! 
       ALLOCATE(SPLM(0:MT,KB)) ;              SPLM       =   ZERO !
@@ -233,7 +250,7 @@ MODULE MOD_PLUME
 # endif
       ! Diffusor stuff
       REAL(SP)                                ::  PLUME_SOURCE, PLUME_ANGLE, DIFF_MOM
-      REAL(SP)                                ::           Rdiff, Wdiff, PI, DIFF_VOL
+      REAL(SP)                                ::           Rdiff, Wdiff,  DIFF_VOL
       REAL(SP)                                ::      PSF, PTF, TOT_PLUMES, DIFF_BUOY
 
 # if defined(FABM)
@@ -244,7 +261,7 @@ MODULE MOD_PLUME
 
 !     Constants and ICs
       entcoef      = 0.07_SP  ! The exact value of this parameter is disputed
-      PI           = 4.0_SP*ATAN(1.0_SP)
+!      PI           = 4.0_SP*ATAN(1.0_SP)
       RUN_PLUME    = .TRUE.
 
 !===================================================================================
