@@ -143,7 +143,7 @@ SUBROUTINE INTERNAL_STEP
   REAL(SP) :: RCOFT
   INTEGER :: ITER
 
-  INTEGER :: IERR   ! lwang intel23@20230711
+!  INTEGER :: IERR   ! lwang intel23@20230711
 !------------------------------------------------------------------------------|
 
   if(dbg_set(dbg_sbr)) write(ipt,*)&
@@ -286,16 +286,16 @@ SUBROUTINE INTERNAL_STEP
 #   endif
 
   ! ---- RUN THE PLUME MODEL ----------------------------------------------------!
-#   if defined (PLUME_CALCULATED)
-      IF (NUMPLM_GL .GT. 0) THEN
-         CALL UPDATE_PLUMES(IntTime,QPLMDIS,TEMP=TPLMDIS,SALT=SPLMDIS)
-#    if defined(FABM)
-         IF (FABM_MODEL) CALL UPDATE_PLUMES(IntTime,QPLMDIS,FABMR=FABMPLMDIS)                               
+!#   if defined (PLUME_CALCULATED)
+!      IF (NUMPLM_GL .GT. 0) THEN
+!         CALL UPDATE_PLUMES(IntTime,QPLMDIS,TEMP=TPLMDIS,SALT=SPLMDIS)
+!#    if defined(FABM)
+!         IF (FABM_MODEL) CALL UPDATE_PLUMES(IntTime,QPLMDIS,FABMR=FABMPLMDIS)                               
 
-#    endif  
-         CALL UPDATE_PLUMES_CALCULATED
-      END IF
-#   endif
+!#    endif  
+!         CALL UPDATE_PLUMES_CALCULATED
+!      END IF
+!#   endif
 
 
   !----SPECIFY THE SOLID BOUNDARY CONDITIONS OF U&V INTERNAL MODES---------------!
@@ -1763,6 +1763,18 @@ SUBROUTINE INTERNAL_STEP
   END IF
 #   endif   
   
+  ! ---- RUN THE PLUME MODEL ----------------------------------------------------!
+#   if defined (PLUME_CALCULATED)
+      IF (NUMPLM_GL .GT. 0) THEN
+         CALL UPDATE_PLUMES(IntTime,QPLMDIS,TEMP=TPLMDIS,SALT=SPLMDIS)
+#    if defined(FABM)
+         IF (FABM_MODEL) CALL UPDATE_PLUMES(IntTime,QPLMDIS,FABMR=FABMPLMDIS)                               
+
+#    endif  
+         CALL UPDATE_PLUMES_CALCULATED
+      END IF
+#   endif
+
 
 #   if defined (WATER_QUALITY)
   !==============================================================================!

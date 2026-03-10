@@ -79,6 +79,8 @@ MODULE MOD_FORCE
   TYPE(NCVAR), POINTER ::  TIDE_ELV_N, TIDE_ELV_P
   CHARACTER(LEN=Char_max_attlen), PUBLIC,ALLOCATABLE :: TIDE_FORCING_COMMENTS(:)
 
+  ! PLUME
+  INTEGER :: NUMPLM 
 
   ! RIVER FORCING VARIABLES FOR UPDATE AND SETUP
   ! NOTE RIVERS ARE A PAIN - EACH PROCESSOR HAS TO FETCH ITS OWN DATA!
@@ -3623,13 +3625,16 @@ CONTAINS
   END SUBROUTINE RIVER_DISCHARGE
   !================================================================
   !================================================================
-  FUNCTION SEARCH_NAME(NCF,NAME) RESULT(RES)
+  FUNCTION SEARCH_NAME(NCF,NAME,INPUT_TYPE,INPUT_NAMES) RESULT(RES)
     ! OUTPUT is the TYPE we are trying to set
     ! Input is the River type we are searching from
     IMPLICIT NONE
     INTEGER :: RES
     TYPE(NCFILE), POINTER :: NCF
+    CHARACTER(LEN=32) :: TYPE_NAME
+    CHARACTER(LEN=32) :: NAME_VAR
     CHARACTER(LEN=*) :: NAME
+    CHARACTER(LEN=*), OPTIONAL :: INPUT_TYPE, INPUT_NAMES
 
     INTEGER :: I, rvrs_in_file,strlen,status
     TYPE(NCDIM), POINTER :: DIM
@@ -3637,7 +3642,7 @@ CONTAINS
     LOGICAL FOUND
 
     IF (DBG_SET(DBG_IO)) THEN
-       WRITE(IPT,*)"SEARCH_NAME (RIVERS)"
+       WRITE(IPT,*)"SEARCH_NAME (RIVERS OR PLUMES)"
        WRITE(IPT,*)"============================="
        write(IPT,*)"LOOKING FOR: '"//TRIM(NAME)//"'"
        WRITE(IPT,*)"=========="
@@ -3645,11 +3650,23 @@ CONTAINS
     END IF
 
 
+    IF (PRESENT(INPUT_TYPE)) THEN
+       TYPE_NAME = INPUT_TYPE
+    ELSE
+       TYPE_NAME = 'rivers'
+    END IF
+
+    IF (PRESENT(INPUT_NAMES)) THEN
+       NAME_VAR = INPUT_NAMES
+    ELSE
+       NAME_VAR = 'river_names'
+    END IF
+
     ! FIND THE RIVER NAME IN THE FILE
-    DIM => FIND_DIM(NCF,'rivers',FOUND)
+    DIM => FIND_DIM(NCF,TYPE_NAME,FOUND)
     rvrs_in_file = DIM%DIM
 
-    VAR => FIND_VAR(NCF,'river_names',found)
+    VAR => FIND_VAR(NCF,NAME_VAR,found)
 
     ! ATTEMPT TO ONLY READ NAMES LIST ONCE
     IF(.NOT. ASSOCIATED(VAR%VEC_CHR)) THEN
