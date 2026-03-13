@@ -138,6 +138,13 @@
 !!$       END DO
 #  endif
 
+# if defined (ICENUDGE)
+   WHERE(AICE>1.0E-5_SP)
+     QPREC2 = QPREC2*(1.0_SP-AICE)
+     QEVAP2 = QEVAP2*(1.0_SP-AICE)
+   END WHERE
+# endif      
+
 # if defined (ICESHELF)
   WHERE(ABS(ISISFN)==1)
      QPREC2 = 0.0_SP

@@ -333,6 +333,17 @@ SUBROUTINE INTERNAL_STEP
 
 # endif    
   !end !defined (TWO_D_MODEL)
+
+
+  !  set QPREC and QEVAP propotional to the ice area when ICENUDGE is
+!  defined
+# if defined (ICENUDGE)
+   WHERE(AICE>1.0E-5_SP)
+     QPREC = QPREC*(1.0_SP-AICE)
+     QEVAP = QEVAP*(1.0_SP-AICE)
+   END WHERE
+# endif
+
   
   !----SPECIFY THE BOTTOM ROUGHNESS AND CALCULATE THE BOTTOM STRESSES------------!
   CALL BOTTOM_ROUGHNESS
