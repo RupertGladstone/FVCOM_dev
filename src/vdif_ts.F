@@ -266,13 +266,16 @@ SUBROUTINE VDIF_TS(NCON1,F)
      SWRADF   = 0.0_SP
      WFSURF   =0.0_SP
      COSGAMA1 =1.0_SP
-# if defined (ICESHELF)
-! visual salt flux from ice shelf freezing 
-     WFSURF(1:M)   = WFSURF(1:M)-NSF_isf(1:M)
-# endif
+
 # if defined (ICENUDGE) 
      WFSURF(1:M)   = WFSURF(1:M)-FVSALT1(1:M) -FVSALT2(1:M)
 # endif 
+
+# if defined (ICESHELF)
+! visual salt flux from ice shelf freezing
+     WFSURF(1:M)   = WFSURF(1:M)-NSF_isf(1:M)
+# endif
+
 !---Considering the salinity conservation, the sea surface salinity flux-----!
 !---can be set as zero, that is----------------------------------------------!
      SASURF   = 0.0_SP

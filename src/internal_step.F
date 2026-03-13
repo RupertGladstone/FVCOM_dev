@@ -730,21 +730,6 @@ SUBROUTINE INTERNAL_STEP
   !                                                    !
 !!
 
-# if defined (ICESHELF)
-     ! Qin call sub-ice shelf shear stress
-     ! not sure if we need ramp
-    CALL BOTTOM_ROUGHNESS_ICESHELF
-     DO I=1,NT
-       IF (ABS(ISISFC(I))==1) THEN
-       WUSURF(I)=-WUISF(I)
-       WVSURF(I)=-WVISF(I)
-       ENDIF
-     END DO
-  
-#   if defined (MULTIPROCESSOR)
-          IF(PAR)CALL AEXCHANGE(EC,MYID,NPROCS,WUSURF,WVSURF)
-#   endif
-# endif
 
 # if defined (ICE)
        !  ggao 0104/2008 for ice ocean couple
@@ -786,6 +771,23 @@ SUBROUTINE INTERNAL_STEP
         IF(PAR)CALL AEXCHANGE(EC,MYID,NPROCS,WUSURF,WVSURF)
 #   endif
 #   endif
+
+# if defined (ICESHELF)
+     ! Qin call sub-ice shelf shear stress
+     ! not sure if we need ramp
+    CALL BOTTOM_ROUGHNESS_ICESHELF
+     DO I=1,NT
+       IF (ABS(ISISFC(I))==1) THEN
+       WUSURF(I)=-WUISF(I)
+       WVSURF(I)=-WVISF(I)
+       ENDIF
+     END DO
+
+#   if defined (MULTIPROCESSOR)
+          IF(PAR)CALL AEXCHANGE(EC,MYID,NPROCS,WUSURF,WVSURF)
+#   endif
+# endif
+
 
 # endif
 !end !defined (TWO_D_MODEL)

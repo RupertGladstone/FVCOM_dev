@@ -104,21 +104,6 @@ SUBROUTINE EXTERNAL_STEP
   CALL BCOND_GCY(9,0)
 # endif
 
-# if defined (ICESHELF)
-     ! Qin call sub-ice shelf shear stress
-     ! not sure what is the reasonable value for  ramp
-     CALL BOTTOM_ROUGHNESS_ICESHELF
-    DO I=1,NT
-    IF (ABS(ISISFC(I))==1)  THEN
-       WUSURF2(I)=WUISF(I)
-       WVSURF2(I)=WVISF(I)
-   ENDIF
-      END DO
-# if defined (MULTIPROCESSOR)
-       IF(PAR)CALL AEXCHANGE(EC,MYID,NPROCS,WUSURF2,WVSURF2)
-#  endif
-# endif
-
 # if defined (ICE)
        !  ggao 01042008 for ice ocean couple
 
@@ -145,6 +130,7 @@ SUBROUTINE EXTERNAL_STEP
 
 #  endif
 
+! modify ice-ocean surface stress when ice nudge module is called        
 # if defined (ICENUDGE)
     ! ice-ocean stress
 	   CALL ICENUDGE_STRESS
@@ -160,6 +146,21 @@ SUBROUTINE EXTERNAL_STEP
 
 # endif
 
+# if defined (ICESHELF)
+     ! Qin call sub-ice shelf shear stress
+     ! not sure what is the reasonable value for  ramp
+     CALL BOTTOM_ROUGHNESS_ICESHELF
+    DO I=1,NT
+    IF (ABS(ISISFC(I))==1)  THEN
+       WUSURF2(I)=WUISF(I)
+       WVSURF2(I)=WVISF(I)
+   ENDIF
+      END DO
+# if defined (MULTIPROCESSOR)
+       IF(PAR)CALL AEXCHANGE(EC,MYID,NPROCS,WUSURF2,WVSURF2)
+#  endif
+# endif
+        
 
 
 !
