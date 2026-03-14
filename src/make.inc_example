@@ -48,14 +48,14 @@
 #========== TOPDIR ========================================================
 # TOPDIR is the directory in which this make file and the fvcom source reside
 
-           TOPDIR        = 
+           TOPDIR        = /cluster/home/qin/FVCOM_dev/src
 #EXAMPLE
 # TOPDIR = /home/user/cchen/FVCOM_source
 # TOPDIR must be set!
 #========== INSTALLDIR =====================================================
 # INSTALLDIR is the directory where you wish to install external libraries
 # The default is in the $(TOPDIR)/libs/install, but you can choose...
-            INSTALLDIR    = $(TOPDIR)/libs/install
+            INSTALLDIR    = /cluster/home/qin/fvcom-petsc/FVCOM_chen/src_semi/libs/install
 #===========================================================================
 # PREPROCESSOR OPTIONS FOR CPP
 #            DEF_FLAGS     = -P -C -traditional 
@@ -70,14 +70,18 @@ empty=
 dashI= $(empty) -I
 dashL= $(empty) -L
 # ### UNCOMMENT HERE!
-             LIBDIR       =  -L$(subst $(colon),$(dashL),$(LIBPATH))
-             INCDIR       =  -I$(subst $(colon),$(dashI),$(INCLUDEPATH))
+ifeq ($(origin LIBPATH), environment)
+  LIBDIR = -L$(subst $(colon),$(dashL),$(LIBPATH))
+endif
+ifeq ($(origin INCLUDEPATH), environment)
+  INCDIR = -I$(subst $(colon),$(dashI),$(INCLUDEPATH))
+endif
 
 ###########################################################################
 
 # LOCAL INSTAL
-#             LIBDIR       =  -L$(INSTALLDIR)/lib
-#             INCDIR       =  -I$(INSTALLDIR)/include
+             LIBDIR       =  -L$(INSTALLDIR)/lib
+             INCDIR       =  -I$(INSTALLDIR)/include -I${PETSC_DIR}/include -I${PETSC_DIR}/include/petsc/finclude
 
 
 #--------------------------------------------------------------------------
@@ -94,17 +98,31 @@ dashL= $(empty) -L
 #                           SET PATH TO LIBRARIES WITH IOLIBS      
 #                           SET PATH TO INCLUDE FILES (netcdf.mod) WITH IOINCS
 #--------------------------------------------------------------------------
-#            FLAG_USE_NETCDF4     = -DUSE_NETCDF4
-#            FLAG_USE_COMPRESSION = -DUSE_COMPRESSION
-             IOLIBS       =  -lnetcdff -lnetcdf #-lhdf5_hl -lhdf5 -lz -lcurl -lm
-#             IOLIBS       =  -lnetcdf #-L/hosts/mao/usr/medm/install/netcdf/3.6.3/em64t/lib -lnetcdf
-             IOINCS       =  #-I/hosts/mao/usr/medm/install/netcdf/3.6.3/em64t/include
-#             IOLIBS       =  -L/usr/local/install/netcdf/gcc_ifort/3.6.2/lib  -lnetcdf
-#             IOINCS       =  -I/usr/local/install/netcdf/gcc_ifort/3.6.2/include
-##             IOLIBS       = -L/usr/local/install/netcdf-4.4.1.1-with-fortran/lib -lnetcdff -lnetcdf
-##             IOINCS       = -I/usr/local/install/netcdf-4.4.1.1-with-fortran/include
-#--------------------------------------------------------------------------
 
+#            FLAG_USE_COMPRESSION = -DUSE_COMPRESSION
+            IOLIBS  = -L/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/lib -lnetcdff -lnetcdf
+            IOINCS  = -I/cluster/software/netCDF-Fortran/4.6.1-gompi-2023a/include
+#--------------------------------------------------------------------------
+#     PETSC 
+#       PETSC IS REQUIRED IF ANY OF THE FOLLOWING FLAGS IS TURNED ON:
+#            FLAG_7  = -DDATA_ASSIM
+#            FLAG_9  = -DSEMI_IMPLICIT
+#            FLAG_23 = -DRRKF
+#            FLAG_23 = -DENKF
+#            FLAG_30 = -DNH
+#            FLAG_37 = -DWAVE_OFFLINE
+#       UNCOMMENT THE RIGHT PETSC FLAG BELOW ON VERSION:
+#       FOR VERSION 2.0   TO 2.3.2
+#            FLAG_41 = -DPETSC_A
+#            include ${PETSC_DIR}/bmake/common/variables
+#
+#       FOR VERSION 2.3.3
+#            FLAG_41 = -DPETSC_B
+#            include ${PETSC_DIR}/bmake/common/variables
+#
+#       FOR VERSION 3.18.5
+            FLAG_41 = -DPETSC_C
+            include ${PETSC_DIR}/lib/petsc/conf/variables
 
 #==========================================================================
 #  BEGIN USER DEFINITION SECTION
@@ -122,9 +140,9 @@ dashL= $(empty) -L
 #                           UNCOMMENT TO SELECT DOUBLE PRECISION
 #--------------------------------------------------------------------------
 
-#            FLAG_1 =  -DDOUBLE_PRECISION 
+            FLAG_1 =  -DDOUBLE_PRECISION 
 
-## SINGLE PRECISION OUTPUT FOR VISIT
+#        SINGLE PRECISION OUTPUT FOR VISIT
 #            FLAG_1 =  -DDOUBLE_PRECISION -DSINGLE_OUTPUT
 
 #--------------------------------------------------------------------------
@@ -133,7 +151,7 @@ dashL= $(empty) -L
 #                           UNCOMMENT TO SELECT SPHERICAL COORDINATES
 #--------------------------------------------------------------------------
 
-#            FLAG_2 = -DSPHERICAL
+            FLAG_2 = -DSPHERICAL
 
 #--------------------------------------------------------------------------
 #        FLOODYING/DRYING   INCLUDE WET/DRY TREATMENT OF DOMAIN
@@ -158,8 +176,8 @@ dashL= $(empty) -L
 #	     FLAG_411 = -DMETIS_5
 #        If FLAG_411 is defined, uncomment path below	     
 #             PARLIB = 
-#             PARTINCS = -I/usr/local/install/metis-5.1.0/gcc-4.4.7/include
-#             PARTLIBS = -L/usr/local/install/metis-5.1.0/gcc-4.4.7/lib -lmetis
+#             PARTINCS = -I/usr/local/install/metis/5.1.0/intel/19/include
+#             PARTLIBS = -L/usr/local/install/metis/5.1.0/intel/19/lib -lmetis
 #        If FLAG_411 is not defined, uncomment path below
              PARLIB = -lmetis  #-L/usr/local/lib -lmetis
              PARTINCS =
@@ -191,10 +209,10 @@ dashL= $(empty) -L
 #
 #--------------------------------------------------------------------------
 
-#             FLAG_6 = -DPROJ
+             FLAG_6 = -DPROJ
 
-#             PROJLIBS       = -lfproj4 -lproj -lm
-#             PROJINCS       =
+             PROJLIBS       = -lfproj4 -lproj -lm
+             PROJINCS       =
 
 #--------------------------------------------------------------------------
 #        DATA_ASSIMILATION  INCLUDE NUDGING BASED DATA ASSIMILATION FOR
@@ -206,7 +224,6 @@ dashL= $(empty) -L
 #--------------------------------------------------------------------------
 
 #             FLAG_7 = -DDATA_ASSIM
-#             include ${PETSC_DIR}/bmake/common/variables
 #             OILIB  = -lmkl_lapack -lmkl_em64t -lguide -lpthread
 
 #             OILIB  = -L/usr/local/share/Intel-Compilers/mkl/lib/em64t -lmkl_lapack -lmkl_em64t -lguide -lpthread
@@ -234,8 +251,7 @@ dashL= $(empty) -L
 #  Semi-Implicit time stepping method
 #--------------------------------------------------------------------------
 
-#             FLAG_9 = -DSEMI_IMPLICIT
-#             include ${PETSC_DIR}/bmake/common/variables
+             FLAG_9 = -DSEMI_IMPLICIT
 
 
 #---------------------------------------------------------------------------
@@ -292,7 +308,7 @@ dashL= $(empty) -L
 #        diffusion and better shape preserving properties than the standard scheme. 
 #--------------------------------------------------------------------------
 
-#            FLAG_44 = -DTVD
+            FLAG_44 = -DTVD
 
 #--------------------------------------------------------------------------
 #        Using A fully multidimensional positive definite advection
@@ -301,7 +317,7 @@ dashL= $(empty) -L
 #        Physics, 54, 325-362, 1984
 #--------------------------------------------------------------------------
 
-#            FLAG_15 = -DMPDATA
+            FLAG_15 = -DMPDATA
 
 #--------------------------------------------------------------------------
 #         Run Two-D Barotropic Mode Only
@@ -363,7 +379,6 @@ dashL= $(empty) -L
 
 #              FLAG_23 = -DRRKF
 #              FLAG_23 = -DENKF
-#             include ${PETSC_DIR}/bmake/common/variables
 #              KFLIB  = -lmkl_lapack -lmkl_em64t -lguide -llapack -lblas 
 
 # For Build on em64t computer (Guppy) 
@@ -407,7 +422,7 @@ dashL= $(empty) -L
 #         2. CALCULATE THE NET HEAT FLUX USING SOLAR HEATING MODULE                          
 #--------------------------------------------------------------------------
 
-#            FLAG_27 = -DHEATING_CALCULATED  
+             FLAG_27 = -DHEATING_CALCULATED  
 #            FLAG_27 = -DHEATING_SOLAR  
 
 #--------------------------------------------------------------------------
@@ -436,8 +451,7 @@ dashL= $(empty) -L
 #        NON-HYDROSTATIC MODEL:
 #--------------------------------------------------------------------------
 
-#             FLAG_30 =  -DNH
-#             include ${PETSC_DIR}/bmake/common/variables
+          FLAG_30 =  -DNH
 
 #--------------------------------------------------------------------------
 #        PARTICLE TRACKING
@@ -458,7 +472,6 @@ dashL= $(empty) -L
 # Svendsen Roller contribution
 #             FLAG_36 = -DWAVE_ROLLER
 #             FLAG_37 = -DWAVE_OFFLINE
-#             include ${PETSC_DIR}/bmake/common/variables
 #--------------------------------------------------------------------------
 #        THIN-DAM MODEL
 #--------------------------------------------------------------------------
@@ -476,16 +489,10 @@ dashL= $(empty) -L
 #--------------------------------------------------------------------------
 
 #           FLAG_40 =  -DLIMITER_VER_ADV
-
-#--------------------------------------------------------------------------
-#        PETSC Version
-#        If your PETSc is 2.3.2 or older, uncomment this flag
-#--------------------------------------------------------------------------
-#             FLAG_41 = -DOLD_PETSC
-
 #--------------------------------------------------------------------------
 #        SPECIAL PARTITION
-#        This flag can make sure the identical repeat run for same amount of CPUs 
+#        This flag can make sure the identical repeat run for same amount of CPUs
+#        (there should be no opt = -O3 when compilation)
 #--------------------------------------------------------------------------
 #             FLAG_42 = -DPARTITION_SPECIAL
 
@@ -493,6 +500,28 @@ dashL= $(empty) -L
 #        Vegetation Impact on FLows, Waves and Sediment (with FLAG_32 turned on)
 #--------------------------------------------------------------------------
 #             FLAG_45 = -DVEGETATION
+
+#---------------------------------------------------------------------------
+#       Ice shelf-ocean interaction module
+#--------------------------------------------------------------------------
+#           FLAG_51  = -DICESHELF
+
+#---------------------------------------------------------------------------
+#       Ice Nudge module, treating sea ice as boundary conditions
+#       (momentum, heat and freshwater flux)
+#--------------------------------------------------------------------------
+#            FLAG_52  = -DICENUDGE
+#           FLAG_521 = -DICENUDGE_DIAGNOSIS
+#---------------------------------------------------------------------------
+#       MTT plume model, takes a bottom hydrothermal source
+#       (heat/salt/tracer flux) and computes how a buoyant plume rises and
+#       entrains ambiet water using MTT theory, then injects the diluted
+#       plume water into the model grid at the height where it becomes
+#       neutrally buoyant.
+#--------------------------------------------------------------------------
+#           FLAG_61  = -DPLUME
+#           FLAG_611 = -DPLUME_CALCULATED
+
 
 #--------------------------------------------------------------------------
 #        DEVELOPMENT FLAGS
@@ -576,23 +605,36 @@ dashL= $(empty) -L
 #--------------------------------------------------------------------------
 #  Intel/MPI Compiler Definitions (SMAST)      
 #--------------------------------------------------------------------------
-         CPP      = /usr/bin/cpp
-         COMPILER = -DIFORT  
-         CC       = mpicc
-         CXX      = mpicxx
-         CFLAGS   = -O3 
-         FC       = mpif90
+#         CPP      = /usr/bin/cpp
+#         COMPILER = -DIFORT  
+#         CC       = mpicc
+#         CXX      = mpicxx
+#         CFLAGS   = -O3 
+#         FC       = mpif90
 #         DEBFLGS  = -check all -traceback
 # Use 'OPT = -O0 -g'  for fast compile to test the make 
 # Use 'OPT = -xP' for fast run on em64t (Hydra and Guppy)
 # Use 'OPT = -xN' for fast run on ia32 (Salmon and Minke)
 #         OPT      = -O0 -g
 #         OPT      = -axN -xN
-         OPT      = -O3
-
+#         OPT      = -O3
+#
 # Do not set static for use with visit!
 #         VISOPT   = -Wl,--export-dynamic
 #         LDFLAGS  =  $(VISITLIBPATH)
+#--------------------------------------------------------------------------
+#  Betzy Gfortran
+#--------------------------------------------------------------------------
+         CPP      = /usr/bin/cpp
+         COMPILER = -DGFORTRAN
+         CC       = mpicc
+         CXX      = mpicxx
+	 CFLAGS   = -O3
+         FC       = mpif90
+         DEBFLGS  = -cpp
+	 OPT      = -O3 -g -fallow-argument-mismatch -ffree-line-length-none
+	 
+
 #--------------------------------------------------------------------------
 #  gfortran defs 
 #--------------------------------------------------------------------------
@@ -658,6 +700,7 @@ dashL= $(empty) -L
    $(FLAG_35) $(FLAG_36) $(FLAG_37) $(FLAG_38) \
    $(FLAG_39) $(FLAG_40) $(FLAG_41) $(FLAG_42) \
    $(FLAG_43) $(FLAG_44) $(FLAG_45) $(FLAG_80) $(FLAG_81) $(FLAG_LAM) $(FLAG_411) \
+   $(FLAG_51) $(FLAG_52) $(FLAG_521) $(FLAG_61) $(FLAG_611) \     
    $(FLAG_101) $(FLAG_102) $(FLAG_103) $(FLAG_104) $(FLAG_105) $(FLAG_321)\
    $(FLAG_211) $(FLAG_212) $(FLAG_213) $(FLAG_251) $(FLAG_261) $(FLAG_262)\
    $(FLAG_USE_NETCDF4) $(FLAG_USE_COMPRESSION)
