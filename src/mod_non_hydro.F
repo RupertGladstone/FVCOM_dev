@@ -58,7 +58,11 @@ MODULE NON_HYDRO
 #include "petsc/finclude/petsc.h"
 use petscmat
 use petscvec
+#  if defined (PETSC_D)
+use petsc
+#  else
 use petscpc
+#  endif
 use petscksp
 use petscis
 # endif
@@ -90,6 +94,15 @@ use petscis
   REAL(SP), ALLOCATABLE  ::  W4Z(:,:)
   REAL(SP), ALLOCATABLE  ::  NHQ(:,:)  , QP1(:,:), NHQ1(:,:)
 
+! create local vars with petsc types to avoid casting issues in function calls
+  PetscInt    :: PIlocal
+  PetscInt    :: PIlocal2
+# if defined PETSC_D
+  PetscScalar :: PSlocal
+# else
+  PetscReal   :: PSlocal
+# endif
+      
   NAMELIST /NML_NH/          &
           & PROJ_SWITCH 
 
@@ -950,7 +963,8 @@ use petscis
         STERM = 0.0D0
       ENDIF 
 
-      CALL VecSetValues(BLOCAL,1,PETSc_POS-1,STERM,INSERT_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PETSc_POS-1
+      CALL VecSetValues(BLOCAL,1,[PIlocal],[STERM],INSERT_VALUES,IERR);CHKERRQ(IERR)
 
     ENDDO
   ENDDO
@@ -1205,8 +1219,10 @@ use petscis
       ENDDO
     ENDIF
 
-    CALL MatSetValuesLocal(A,1,PROW1-1,NREC,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
-    CALL MatSetValuesLocal(A,1,PROW2-1,NREC,COL2_,VAL2_,ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal  = PROW1-1 
+    CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal  = PROW2-1 
+    CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL2_],[VAL2_],ADD_VALUES,IERR);CHKERRQ(IERR)
 
     DO K=2, KBM1-1
 
@@ -1418,8 +1434,10 @@ use petscis
         ENDDO
       ENDIF
 
-      CALL MatSetValuesLocal(A,1,PROW1-1,NREC,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
-      CALL MatSetValuesLocal(A,1,PROW2-1,NREC,COL2_,VAL2_,ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal  = PROW1-1 
+      CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal  = PROW2-1 
+      CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL2_],[VAL2_],ADD_VALUES,IERR);CHKERRQ(IERR)
 
     ENDDO
 
@@ -1584,8 +1602,10 @@ use petscis
       ENDDO
     ENDIF
 
-    CALL MatSetValuesLocal(A,1,PROW1-1,NREC,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
-    CALL MatSetValuesLocal(A,1,PROW2-1,NREC,COL2_,VAL2_,ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal  = PROW1-1 
+    CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal  = PROW2-1 
+    CALL MatSetValuesLocal(A,1,[PIlocal],NREC,[COL2_],[VAL2_],ADD_VALUES,IERR);CHKERRQ(IERR)
 
 !%#   if defined (WET_DRY)
 !%    ENDIF
@@ -1677,7 +1697,8 @@ use petscis
     VCOL1 = VCOL1 + ( (A1AVG(I,1)*DZ(I,2)+A1AVG(I,2)*DZ(I,1))/(DZ(I,1)+DZ(I,2))*A1AVG(I,2)+(A2AVG(I,1)*DZ(I,2)+A2AVG(I,2)*DZ(I,1))/(DZ(I,1)+DZ(I,2))*A2AVG(I,2) )/D(I)/DZZ(I,1)*ART1(I)
     VAL1_(2) = VCOL1 + ART1(I)/D(I)/DZZ(I,1)
     COL1_(2) = PCOL1-1
-    CALL MatSetValuesLocal(A,1,PROW-1,2,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = PROW-1
+    CALL MatSetValuesLocal(A,1,[PIlocal],2,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
 
     DO K=2, KBM1-1
 
@@ -1702,7 +1723,8 @@ use petscis
       VCOL1 = VCOL1 + ( (A1AVG(I,K)*DZ(I,K+1)+A1AVG(I,K+1)*DZ(I,K))/(DZ(I,K)+DZ(I,K+1))*A1AVG(I,K+1)+(A2AVG(I,K)*DZ(I,K+1)+A2AVG(I,K+1)*DZ(I,K))/(DZ(I,K)+DZ(I,K+1))*A2AVG(I,K+1) )/D(I)/DZZ(I,K)*ART1(I)
       VAL1_(3) = VCOL1 + ART1(I)/D(I)/DZZ(I,K)
       COL1_(3) = PCOL1-1
-      CALL MatSetValuesLocal(A,1,PROW-1,3,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW-1
+      CALL MatSetValuesLocal(A,1,[PIlocal],3,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
     ENDDO
 
     COL1_ = 0
@@ -1720,7 +1742,8 @@ use petscis
     VCOL1 = VCOL1 + ( -( (A1AVG(I,KBM1-1)*DZ(I,KBM1)+A1AVG(I,KBM1)*DZ(I,KBM1-1))/(DZ(I,KBM1-1)+DZ(I,KBM1))*A1AVG(I,KBM1)+(A2AVG(I,KBM1-1)*DZ(I,KBM1)+A2AVG(I,KBM1)*DZ(I,KBM1-1))/(DZ(I,KBM1-1)+DZ(I,KBM1))*A2AVG(I,KBM1) )/D(I)/DZZ(I,KBM1-1)*ART1(I) + A1AVGD(I)*ART1(I)*A1AVGD(I)/H(I) + A2AVGD(I)*ART1(I)*A2AVGD(I)/H(I) )
     VAL1_(2) = VCOL1 + ( - ART1(I)/D(I)/DZZ(I,KBM1-1) )
     COL1_(2) = PCOL1-1
-    CALL MatSetValuesLocal(A,1,PROW-1,2,COL1_,VAL1_,ADD_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = PROW-1
+    CALL MatSetValuesLocal(A,1,[PIlocal],2,[COL1_],[VAL1_],ADD_VALUES,IERR);CHKERRQ(IERR)
 
     DO LN =1,NTSN(I)-1
       I1 = NBSN(I,LN)
@@ -1735,8 +1758,10 @@ use petscis
       VCOL1 = -(0.5_SP*(VY(I1)-VY(I2))*COS(SITA_GD(I)) + 0.5_SP*(VX(I2)-VX(I1))*SIN(SITA_GD(I)))*ART1(I)*PHPN(I)/ART2(I)
 #     endif
 
-      CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-      CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL2-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+      CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW-1 ; PIlocal2 = PCOL2-1
+      CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
     ENDDO
 
 #   if defined (WET_DRY)
@@ -1765,33 +1790,41 @@ use petscis
         PROW  = ALO_2_PLO(I,1)
 
         PCOL1 = ALO_2_PLO(NBSN(I,J),1)
-        CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+        CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
         PCOL1 = ALO_2_PLO(NBSN(I,J),2)
-        CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+        CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
 
         DO K=2, KBM1-1
           PROW  = ALO_2_PLO(I,K)
 
           PCOL1 = ALO_2_PLO(NBSN(I,J),K-1)
-          CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+          PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+          CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
           PCOL1 = ALO_2_PLO(NBSN(I,J),K)
-          CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+          PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+          CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
           PCOL1 = ALO_2_PLO(NBSN(I,J),K+1)
-          CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+          PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+          CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
         ENDDO
 
         PROW  = ALO_2_PLO(I,KBM1)
 
         PCOL1 = ALO_2_PLO(NBSN(I,J),KBM1-1)
-        CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+        CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
         PCOL1 = ALO_2_PLO(NBSN(I,J),KBM1)
-        CALL MatSetValuesLocal(A,1,PROW-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW-1 ; PIlocal2 = PCOL1-1
+        CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
       ENDDO
 
       VCOL1 = 1.0D0
       DO K=1, KBM1
         PROW = ALO_2_PLO(I,K)
-        CALL MatSetValuesLocal(A,1,PROW-1,1,PROW-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW-1
+        CALL MatSetValuesLocal(A,1,[PIlocal],1,[PIlocal],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
       ENDDO
 
     ENDIF
@@ -2464,7 +2497,8 @@ use petscis
     ELSE
       STERM = EL(I)
     ENDIF
-    CALL VecSetValues(BL_EL,1,PETSc_POS-1,STERM,INSERT_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = PETSc_POS-1
+    CALL VecSetValues(BL_EL,1,[PIlocal],[STERM],INSERT_VALUES,IERR);CHKERRQ(IERR)
   ENDDO
 
 ! radiation obc
@@ -2478,7 +2512,8 @@ use petscis
     CC = SQRT(GRAV_N(I1)*H(I1))*DTI/DLTN_OBC(JN)
     STERM = ET(I1)*(1.0_SP-DTI/10800.0_SP)/(1.0_SP+CC)
 
-    CALL VecSetValues(BL_EL,1,PETSc_POS-1,STERM,INSERT_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = PETSc_POS-1
+    CALL VecSetValues(BL_EL,1,[PIlocal],[STERM],INSERT_VALUES,IERR);CHKERRQ(IERR)
   END DO
 !
 
@@ -2527,28 +2562,40 @@ use petscis
 
 #     if defined (WET_DRY)
       IF(ISWETN(PCOL1)==1) THEN
-        CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL1-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-        CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL1-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW1-1 ; PIlocal2 = PCOL1-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW2-1 ; PIlocal2 = PCOL1-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR)
       ENDIF
 
       IF(ISWETN(PCOL2)==1) THEN
-        CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL2-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-        CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL2-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR) 
+        PIlocal = PROW1-1 ; PIlocal2 = PCOL2-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW2-1 ; PIlocal2 = PCOL2-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR) 
       ENDIF
 
       IF(ISWETN(PCOL3)==1) THEN
-        CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL3-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-        CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL3-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW1-1 ; PIlocal2 = PCOL3-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+        PIlocal = PROW2-1 ; PIlocal2 = PCOL3-1 
+        CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR)
       ENDIF
 #     else
-      CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL1-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-      CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL1-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW1-1 ; PIlocal2 = PCOL1-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW2-1 ; PIlocal2 = PCOL1-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR)
 
-      CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL2-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-      CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL2-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR) 
+      PIlocal = PROW1-1 ; PIlocal2 = PCOL2-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW2-1 ; PIlocal2 = PCOL2-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR) 
 
-      CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL3-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)
-      CALL MatSetValuesLocal(A_EL,1,PROW2-1,1,PCOL3-1,VCOL2,ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW1-1 ; PIlocal2 = PCOL3-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW2-1 ; PIlocal2 = PCOL3-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL2],ADD_VALUES,IERR);CHKERRQ(IERR)
 #     endif
 
 !%#     if defined (WET_DRY)
@@ -2564,7 +2611,8 @@ use petscis
     PCOL1  = ALO_2_PLO_NODE(I)
     
     VCOL1 = 1.0D0
-    CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL1-1,VCOL1,ADD_VALUES,IERR);CHKERRQ(IERR)    
+    PIlocal = PROW1-1 ; PIlocal2 = PCOL1-1 
+    CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],ADD_VALUES,IERR);CHKERRQ(IERR)    
 
   ENDDO
 
@@ -2582,13 +2630,15 @@ use petscis
     DO J=1, NTSN(NODE)-1
 
       PCOL1 = ALO_2_PLO_NODE(NBSN(NODE,J))
-      CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW1-1 ; PIlocal2 = PCOL1-1 
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
 
     ENDDO
 
     VCOL1 = 1.0D0
     PROW1 = ALO_2_PLO_NODE(NODE)
-    CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PROW1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = PROW1-1
+    CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
 
   ENDDO
 
@@ -2603,7 +2653,8 @@ use petscis
       PCOL1 = ALO_2_PLO_NODE(I2)
       CC = SQRT(GRAV_N(I1)*H(I1))*DTI/DLTN_OBC(JN)
       VCOL1 = -CC/(1.0_SP+CC)
-      CALL MatSetValuesLocal(A_EL,1,PROW1-1,1,PCOL1-1,VCOL1,INSERT_VALUES,IERR);CHKERRQ(IERR)
+      PIlocal = PROW1-1 ; PIlocal2 = PCOL1-1
+      CALL MatSetValuesLocal(A_EL,1,[PIlocal],1,[PIlocal2],[VCOL1],INSERT_VALUES,IERR);CHKERRQ(IERR)
   END DO
 !
 
@@ -2620,8 +2671,12 @@ use petscis
   CALL VecScatterBegin(G2L_EL,X_EL,XL_EL,INSERT_VALUES,SCATTER_FORWARD,IERR);CHKERRQ(IERR)
   CALL VecScatterEnd(G2L_EL,X_EL,XL_EL,INSERT_VALUES,SCATTER_FORWARD,IERR);CHKERRQ(IERR)
 # endif
+# if defined PETSC_D
+  CALL VecGetArray(XL_EL,XVALS_EL,IERR);CHKERRQ(IERR)
+# else
   CALL VecGetArrayF90(XL_EL,XVALS_EL,IERR);CHKERRQ(IERR)
-
+# endif
+      
   EL = 0.0_SP
   DO I=1,N_VERTS
     IK = PLO_2_ALO_NODE(I)
@@ -2699,7 +2754,8 @@ use petscis
     QTERM = QP(IK(1),IK(2))
     
     !insert the value into the local PLO-sized vector xlocal
-    CALL VecSetValues(XLOCAL,1,I-1,QTERM,INSERT_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = I-1
+    CALL VecSetValues(XLOCAL,1,[PIlocal],[QTERM],INSERT_VALUES,IERR);CHKERRQ(IERR)
   ENDDO
 
   !-----------------------------------------------------------------------------
@@ -2742,7 +2798,8 @@ use petscis
   DO I=1,N_VERTS
     IK = PLO_2_ALO_NODE(I)
     QTERM = EL(IK)
-    CALL VecSetValues(XL_EL,1,I-1,QTERM,INSERT_VALUES,IERR);CHKERRQ(IERR)
+    PIlocal = I-1
+    CALL VecSetValues(XL_EL,1,[PIlocal],[QTERM],INSERT_VALUES,IERR);CHKERRQ(IERR)
   ENDDO
 
 # if defined (OLD_PETSC)
@@ -2792,7 +2849,12 @@ use petscis
   CALL VecScatterBegin(G2L,X,XLOCAL,INSERT_VALUES,SCATTER_FORWARD,IERR);CHKERRQ(IERR)
   CALL VecScatterEnd(G2L,X,XLOCAL,INSERT_VALUES,SCATTER_FORWARD,IERR);CHKERRQ(IERR)
 # endif
+
+# if defined PETSC_D
+  CALL VecGetArray(XLOCAL,XVALS,IERR);CHKERRQ(IERR)
+# else
   CALL VecGetArrayF90(XLOCAL,XVALS,IERR);CHKERRQ(IERR)
+# endif
 
   !--------------------------------------------------------------------------
   !zero out q so that we can set properly on boundary nodes

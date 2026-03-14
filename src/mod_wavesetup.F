@@ -433,8 +433,11 @@
   CALL VecScatterEnd(G2L_EL,X_EL,XL_EL,INSERT_VALUES,SCATTER_FORWARD,IERR);CHKERRQ(IERR)
 # endif
 
-
+# if defined PETSC_D
+  CALL VecGetArray(XL_EL,XVALS_EL,IERR);CHKERRQ(IERR)
+# else
   CALL VecGetArrayF90(XL_EL,XVALS_EL,IERR);CHKERRQ(IERR)
+# endif
 
 
    IF(LSETUP == 1)THEN                                               
