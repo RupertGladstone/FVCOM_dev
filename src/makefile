@@ -32,6 +32,10 @@ include ./make.inc
             SHELL         = /bin/sh
             EXEC          = fvcom
 
+ifndef MOD_PAR_SOURCE
+  $(error MOD_PAR_SOURCE is not defined in make.inc. Please choose mod_par.F or mod_par_special.F)
+endif
+
 #--------------------------------------------------------------------------
 #  Preprocessing and Compilation Directives
 #--------------------------------------------------------------------------
@@ -59,8 +63,8 @@ include ./make.inc
 
 MODS  = mod_prec.F	sinter.F	mod_types.F	mod_time.F	\
 	mod_main.F	mod_spherical.F	mod_utils.F	mod_clock.F	\
-	eqs_of_state.F	mod_interp.F	mod_par.F	\
-	mod_par_special.F		mod_ncll.F	mod_nctools.F	\
+	eqs_of_state.F	mod_interp.F	$(MOD_PAR_SOURCE)		\
+	mod_ncll.F	mod_nctools.F	\
 	mod_wd.F	mod_sng.F	mod_heatflux.F	mod_solar.F	\
 	mod_bulk.F	mod_input.F	mod_force.F	mod_obcs.F	mod_petsc.F	\
 	mod_semi_implicit.F		mod_non_hydro.F	mod_set_time.F	\
