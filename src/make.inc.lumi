@@ -128,19 +128,12 @@ endif
             FLAG_41 = -DPETSC_C
 #            include ${PETSC_DIR}/lib/petsc/conf/variables
 
-#       FOR VERSION 3.
+#       FOR VERSION 3.24.4
             FLAG_41 = -DPETSC_D
-# My PETSc installation... version 3.24.something
-#
-# 1. Set your custom path
 PETSC_DIR = /projappl/project_462001194/Source/petsc/arch-lumi-gnu
 
-# 2. Point to the internal PETSc makefiles
-# Prefix installs (local) usually put these in lib/petsc/conf/
 include $(PETSC_DIR)/lib/petsc/conf/petscvariables
 include $(PETSC_DIR)/lib/petsc/conf/petscrules
-
-# 3. Add PETSc to the FVCOM include/link paths
 # The variables imported above ($PETSC_CC_INCLUDES and $PETSC_LIB) 
 # are automatically populated by the include files we just added.
 INCDIR += $(PETSC_CC_INCLUDES)
